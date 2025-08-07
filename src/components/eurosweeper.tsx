@@ -27,7 +27,7 @@ export default function EuroSweeper() {
   const [board, setBoard] = useState<Board>([]);
   const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
   const [isFlagging, setIsFlagging] = useState(false);
-  const [isChording, setIsChording] = useState(false);
+  const [isChording, setIsChording] = useState(true);
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
   const themeToggleRef = useRef<ThemeToggleHandle>(null);
@@ -42,7 +42,6 @@ export default function EuroSweeper() {
     setGameStatus('playing');
     setFlagCount(0);
     setIsFlagging(false);
-    setIsChording(false);
 
     // Auto-reveal first safe square
     const safeTiles: { row: number, col: number }[] = [];
@@ -127,10 +126,13 @@ export default function EuroSweeper() {
       return; // Exit after handling flag
     }
     
-    // If not flagging, and tile is flagged or already revealed, do nothing.
-    if (currentTile.isFlagged || currentTile.isRevealed) {
-      // Unless it's a chording attempt on a revealed tile
-      if (isChording && currentTile.isRevealed && currentTile.adjacentMines > 0) {
+    if (currentTile.isFlagged) {
+      return;
+    }
+    
+    if (currentTile.isRevealed) {
+        // Chording attempt on a revealed tile
+      if (isChording && currentTile.adjacentMines > 0) {
         handleChord(row, col);
       }
       return;
