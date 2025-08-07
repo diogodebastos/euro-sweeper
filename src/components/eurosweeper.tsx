@@ -128,7 +128,6 @@ export default function EuroSweeper() {
   
     const currentTile = board[row][col];
     
-    // Flagging logic comes first.
     if (isFlagging) {
       if (!currentTile.isRevealed) {
         const newBoard = board.map(r => r.map(c => ({ ...c })));
@@ -138,7 +137,7 @@ export default function EuroSweeper() {
         setFlagCount(prev => prev + (isNowFlagged ? 1 : -1));
         setBoard(newBoard);
       }
-      return; // Exit after handling flag
+      return;
     }
     
     if (currentTile.isFlagged) {
@@ -146,7 +145,6 @@ export default function EuroSweeper() {
     }
     
     if (currentTile.isRevealed) {
-        // Chording attempt on a revealed tile
       if (isChording && currentTile.adjacentMines > 0) {
         handleChord(row, col);
       }
@@ -261,7 +259,7 @@ export default function EuroSweeper() {
       );
     }
     
-    return <AlertDialogDescription>You have cleared all of Europe! Congratulations!</AlertDialogDescription>;
+    return <AlertDialogDescription>Congratulations! You've sweep the entire Europe!</AlertDialogDescription>;
   }
 
   return (
