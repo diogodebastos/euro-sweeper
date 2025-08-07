@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Board, Tile as TileType } from '@/lib/game';
 import { createBoard, floodFill } from '@/lib/game';
 import { countries, Country } from '@/lib/countries';
@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Flag, Bomb, RefreshCw } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle, type ThemeToggleHandle } from '@/components/theme-toggle';
 
 type GameStatus = 'playing' | 'won' | 'lost';
 
@@ -29,6 +29,7 @@ export default function EuroSweeper() {
   const [isFlagging, setIsFlagging] = useState(false);
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
+  const themeToggleRef = useRef<ThemeToggleHandle>(null);
   
   const totalNonMineTiles = useMemo(() => {
     return currentCountry.shape.flat().filter(cell => cell === 1).length - currentCountry.mines;
@@ -50,12 +51,15 @@ export default function EuroSweeper() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // We don't want to toggle flag mode if the user is typing in an input.
+      // We don't want to toggle if the user is typing in an input.
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
       if (e.key.toLowerCase() === 'f') {
         setIsFlagging(prev => !prev);
+      }
+      if (e.key.toLowerCase() === 'd') {
+        themeToggleRef.current?.toggle();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -135,7 +139,7 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex items-center space-x-4">
-           <ThemeToggle />
+           <ThemeToggle ref={themeToggleRef} />
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
