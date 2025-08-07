@@ -23,21 +23,25 @@ import { ThemeToggle, type ThemeToggleHandle } from '@/components/theme-toggle';
 type GameStatus = 'playing' | 'won' | 'lost';
 
 export default function EuroSweeper() {
-  const [currentCountry, setCurrentCountry] = useState<Country>(countries.portugal);
+  const [currentCountryKey, setCurrentCountryKey] = useState<string>('portugal');
   const [board, setBoard] = useState<Board>([]);
   const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
   const [isFlagging, setIsFlagging] = useState(false);
   const [isChording, setIsChording] = useState(true);
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
+  const [beatenCountries, setBeatenCountries] = useState<string[]>([]);
   const themeToggleRef = useRef<ThemeToggleHandle>(null);
+
+  const currentCountry = useMemo(() => countries[currentCountryKey], [currentCountryKey]);
   
   const totalNonMineTiles = useMemo(() => {
     return currentCountry.shape.flat().filter(cell => cell === 1).length - currentCountry.mines;
   }, [currentCountry]);
 
-  const startGame = useCallback((country: Country) => {
-    setCurrentCountry(country);
+  const startGame = useCallback((countryKey: string) => {
+    const country = countries[countryKey];
+    setCurrentCountryKey(countryKey);
     let newBoard = createBoard(country.shape, country.mines);
     setGameStatus('playing');
     setFlagCount(0);
@@ -78,14 +82,14 @@ export default function EuroSweeper() {
   }, []);
 
   useEffect(() => {
-    startGame(countries.portugal);
+    startGame('portugal');
   }, [startGame]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (gameStatus === 'lost' && e.key === ' ') {
         e.preventDefault();
-        startGame(currentCountry);
+        startGame(currentCountryKey);
         return;
       }
       
@@ -108,13 +112,16 @@ export default function EuroSweeper() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [gameStatus, startGame, currentCountry]);
+  }, [gameStatus, startGame, currentCountryKey]);
 
   const checkWinCondition = useCallback((currentRevealedCount: number) => {
     if (currentRevealedCount > 0 && currentRevealedCount === totalNonMineTiles) {
       setGameStatus('won');
+      if (!beatenCountries.includes(currentCountryKey)) {
+        setBeatenCountries(prev => [...prev, currentCountryKey]);
+      }
     }
-  }, [totalNonMineTiles]);
+  }, [totalNonMineTiles, beatenCountries, currentCountryKey]);
   
   const handleTileClick = (row: number, col: number) => {
     if (gameStatus !== 'playing') return;
@@ -223,11 +230,39 @@ export default function EuroSweeper() {
 
 
   const handleNextCountry = (countryKey: string) => {
-    const nextCountry = countries[countryKey];
-    if (nextCountry) {
-      startGame(nextCountry);
-    }
+    startGame(countryKey);
   };
+
+  const renderNextCountryButtons = () => {
+    const adjacentUnbeaten = currentCountry.adjacent.filter(key => !beatenCountries.includes(key));
+
+    if (adjacentUnbeaten.length > 0) {
+      return adjacentUnbeaten.map(key => (
+        <AlertDialogAction key={key} onClick={() => handleNextCountry(key)}>
+          Proceed to {countries[key].name}
+        </AlertDialogAction>
+      ));
+    }
+    
+    const allUnbeaten = Object.keys(countries).filter(key => !beatenCountries.includes(key) && key !== currentCountryKey);
+    
+    if (allUnbeaten.length > 0) {
+      return (
+        <>
+          <AlertDialogDescription>
+            You've cleared all adjacent countries! Choose your next destination.
+          </AlertDialogDescription>
+          {allUnbeaten.map(key => (
+            <AlertDialogAction key={key} onClick={() => handleNextCountry(key)}>
+              Travel to {countries[key].name}
+            </AlertDialogAction>
+          ))}
+        </>
+      );
+    }
+    
+    return <AlertDialogDescription>You have cleared all of Europe! Congratulations!</AlertDialogDescription>;
+  }
 
   return (
     <div className="flex flex-col items-center">
@@ -262,10 +297,10 @@ export default function EuroSweeper() {
               onCheckedChange={setIsChording}
             />
           </div>
-          <ThemeToggle ref={themeToggleRef} />
-          <Button variant="outline" size="icon" onClick={() => startGame(currentCountry)} aria-label="Restart Game">
+          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game">
             <RefreshCw className="w-5 h-5" />
           </Button>
+          <ThemeToggle ref={themeToggleRef} />
         </div>
       </div>
       
@@ -278,18 +313,14 @@ export default function EuroSweeper() {
               {gameStatus === 'won' ? `Congratulations! You've cleared ${currentCountry.name}!` : 'Game Over!'}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {gameStatus === 'won' ? 'Ready for your next challenge? Choose an adjacent country to continue your European tour.' : 'You clicked on a mine. Better luck next time!'}
+              {gameStatus === 'won' ? 'Ready for your next challenge? Choose an adjacent country to continue your European tour.' : 'You clicked on a mine. Better luck next time! Press Space to try again.'}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             {gameStatus === 'won' ? (
-              currentCountry.adjacent.map(key => (
-                <AlertDialogAction key={key} onClick={() => handleNextCountry(key)}>
-                  Proceed to {countries[key].name}
-                </AlertDialogAction>
-              ))
+              renderNextCountryButtons()
             ) : (
-               <AlertDialogAction onClick={() => startGame(currentCountry)}>Try Again</AlertDialogAction>
+               <AlertDialogAction onClick={() => startGame(currentCountryKey)}>Try Again</AlertDialogAction>
             )}
           </AlertDialogFooter>
         </AlertDialogContent>

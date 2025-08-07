@@ -48,6 +48,78 @@ export const countries: { [key: string]: Country } = {
       [0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0],
     ],
     mines: 40,
-    adjacent: [], // Add France, etc. later
+    adjacent: ["portugal", "france"],
   },
+  france: {
+    name: "France",
+    mines: 50,
+    adjacent: ["spain", "belgium", "luxembourg", "germany", "switzerland", "italy"],
+    shape: [
+      [0,0,0,1,1,1,1,1,1,1,1,0],
+      [0,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1],
+      [0,1,1,1,1,1,1,1,1,1,1,0],
+      [0,0,1,1,1,1,1,1,1,1,1,0],
+      [0,0,0,1,1,1,1,1,1,1,0,0],
+      [0,0,0,0,1,1,1,1,1,0,0,0],
+    ]
+  },
+  belgium: {
+    name: "Belgium",
+    mines: 10,
+    adjacent: ["france", "luxembourg", "germany"],
+    shape: [
+      [1,1,1],
+      [1,1,1],
+    ]
+  },
+  luxembourg: {
+    name: "Luxembourg",
+    mines: 2,
+    adjacent: ["france", "belgium", "germany"],
+    shape: [
+      [1]
+    ]
+  },
+  germany: {
+    name: "Germany",
+    mines: 45,
+    adjacent: ["france", "belgium", "luxembourg", "switzerland", "italy"],
+    shape: [
+      [0,1,1,1,1,1,0],
+      [1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1],
+      [1,1,1,1,1,1,1],
+      [0,1,1,1,1,1,0],
+      [0,0,1,1,1,0,0],
+    ]
+  },
+  switzerland: {
+    name: "Switzerland",
+    mines: 12,
+    adjacent: ["france", "germany", "italy"],
+    shape: [
+      [0,1,1,0],
+      [1,1,1,1],
+      [0,1,1,0],
+    ]
+  },
+  italy: {
+    name: "Italy",
+    mines: 35,
+    adjacent: ["france", "switzerland", "germany"],
+    shape: [
+      [0,1,1,0],
+      [0,1,1,0],
+      [0,0,1,1],
+      [0,0,1,1],
+      [1,1,1,1],
+      [1,1,1,0],
+      [0,1,1,0],
+      [0,0,1,0],
+      [0,0,1,1],
+      [0,0,1,1],
+    ]
+  }
 };
