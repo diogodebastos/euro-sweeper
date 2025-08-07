@@ -229,7 +229,6 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <ThemeToggle ref={themeToggleRef} />
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
@@ -252,6 +251,7 @@ export default function EuroSweeper() {
               onCheckedChange={setIsChording}
             />
           </div>
+          <ThemeToggle ref={themeToggleRef} />
           <Button variant="outline" size="icon" onClick={() => startGame(currentCountry)} aria-label="Restart Game">
             <RefreshCw className="w-5 h-5" />
           </Button>
