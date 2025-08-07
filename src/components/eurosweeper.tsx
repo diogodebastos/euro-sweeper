@@ -66,14 +66,11 @@ export default function EuroSweeper() {
 
     if (firstMove) {
       const { row, col } = firstMove;
-      // Since floodFill now returns the total revealed count for the whole board,
-      // we can directly use its return values.
       const { board: revealedBoard, revealedCount: initialRevealed } = floodFill(newBoard, row, col);
       setBoard(revealedBoard);
       setRevealedCount(initialRevealed);
       checkWinCondition(initialRevealed);
     } else {
-      // No safe tiles found (unlikely, but handle it)
       setBoard(newBoard);
       setRevealedCount(0);
     }
@@ -160,21 +157,19 @@ export default function EuroSweeper() {
   };
   
   const handleChord = (row: number, col: number) => {
-    let newBoard = board.map(r => r.map(c => ({...c})));
-    const tile = newBoard[row][col];
-
+    const tile = board[row][col];
+    const neighbors = [];
     let adjacentFlags = 0;
-    const neighborsToReveal = [];
+
     for (let dr = -1; dr <= 1; dr++) {
         for (let dc = -1; dc <= 1; dc++) {
             if (dr === 0 && dc === 0) continue;
             const nr = row + dr;
             const nc = col + dc;
-            if (nr >= 0 && nr < newBoard.length && nc >= 0 && nc < newBoard[0].length && newBoard[nr][nc].isVisible) {
-                if (newBoard[nr][nc].isFlagged) {
+            if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length && board[nr][nc].isVisible) {
+                neighbors.push(board[nr][nc]);
+                if (board[nr][nc].isFlagged) {
                     adjacentFlags++;
-                } else if (!newBoard[nr][nc].isRevealed) {
-                    neighborsToReveal.push({ r: nr, c: nc });
                 }
             }
         }
@@ -184,12 +179,62 @@ export default function EuroSweeper() {
         return;
     }
 
+    let newBoard = board.map(r => r.map(c => ({...c})));
+    let currentRevealedCount = revealedCount;
     let gameOver = false;
-    for (const { r, c } of neighborsToReveal) {
-        if (newBoard[r][c].isMine) {
-            gameOver = true;
-            break;
+
+    // First, check for incorrect flags
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = row + dr;
+            const nc = col + dc;
+             if (nr >= 0 && nr < newBoard.length && nc >= 0 && nc < newBoard[0].length && newBoard[nr][nc].isVisible) {
+                if (newBoard[nr][nc].isFlagged && !newBoard[nr][nc].isMine) {
+                    gameOver = true;
+                    break;
+                }
+            }
         }
+        if (gameOver) break;
+    }
+
+    if (gameOver) {
+        newBoard.forEach(r => r.forEach(c => {
+            if (c.isMine) c.isRevealed = true;
+        }));
+        setBoard(newBoard);
+        setGameStatus('lost');
+        return;
+    }
+    
+    // If flags are correct, reveal neighbors
+    for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+             if (dr === 0 && dc === 0) continue;
+             const nr = row + dr;
+             const nc = col + dc;
+             if (nr >= 0 && nr < newBoard.length && nc >= 0 && nc < newBoard[0].length && newBoard[nr][nc].isVisible) {
+                const neighbor = newBoard[nr][nc];
+                if (!neighbor.isRevealed && !neighbor.isFlagged) {
+                    if (neighbor.isMine) {
+                       // This case should not be reached if flags are correct, but as a safeguard
+                       gameOver = true;
+                       break;
+                    }
+                    if (neighbor.adjacentMines === 0) {
+                        const { board: floodedBoard, revealedCount: updatedRevealed } = floodFill(newBoard, nr, nc);
+                        newBoard = floodedBoard;
+                        currentRevealedCount = updatedRevealed;
+                    } else if (!newBoard[nr][nc].isRevealed) {
+                        newBoard[nr][nc].isRevealed = true;
+                        // Recalculate total revealed
+                        currentRevealedCount = newBoard.flat().filter(t => t.isRevealed).length;
+                    }
+                }
+            }
+        }
+        if(gameOver) break;
     }
     
     if (gameOver) {
@@ -201,33 +246,10 @@ export default function EuroSweeper() {
         return;
     }
 
-    let boardAfterChord = newBoard;
-    let anyRevealed = false;
-
-    for (const { r, c } of neighborsToReveal) {
-        if (!boardAfterChord[r][c].isRevealed) {
-            anyRevealed = true;
-            if (boardAfterChord[r][c].adjacentMines === 0) {
-                const { board: floodedBoard } = floodFill(boardAfterChord, r, c);
-                boardAfterChord = floodedBoard;
-            } else {
-                boardAfterChord[r][c].isRevealed = true;
-            }
-        }
-    }
-
-    if (anyRevealed) {
-      let currentRevealedCount = 0;
-      boardAfterChord.forEach(r => r.forEach(tile => {
-          if (tile.isRevealed) {
-              currentRevealedCount++;
-          }
-      }));
-      
-      setBoard(boardAfterChord);
-      setRevealedCount(currentRevealedCount);
-      checkWinCondition(currentRevealedCount);
-    }
+    const finalRevealedCount = newBoard.flat().filter(t => t.isRevealed).length;
+    setBoard(newBoard);
+    setRevealedCount(finalRevealedCount);
+    checkWinCondition(finalRevealedCount);
   };
 
   const handleNextCountry = (countryKey: string) => {
