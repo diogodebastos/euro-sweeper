@@ -102,7 +102,7 @@ export default function EuroSweeper() {
   }, []);
 
   const checkWinCondition = useCallback((currentRevealedCount: number) => {
-    if (currentRevealedCount === totalNonMineTiles) {
+    if (currentRevealedCount > 0 && currentRevealedCount === totalNonMineTiles) {
       setGameStatus('won');
     }
   }, [totalNonMineTiles]);
@@ -160,51 +160,38 @@ export default function EuroSweeper() {
   };
   
   const handleChord = (row: number, col: number) => {
-    const tile = board[row][col];
-    let newBoard = board.map(r => r.map(c => ({ ...c })));
-    
+    let newBoard = board.map(r => r.map(c => ({...c})));
+    const tile = newBoard[row][col];
+
     let adjacentFlags = 0;
-    const neighbors = [];
+    const neighborsToReveal = [];
     for (let dr = -1; dr <= 1; dr++) {
-      for (let dc = -1; dc <= 1; dc++) {
-        if (dr === 0 && dc === 0) continue;
-        const nr = row + dr;
-        const nc = col + dc;
-        if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length && board[nr][nc].isVisible) {
-          neighbors.push({r: nr, c: nc});
-          if (board[nr][nc].isFlagged) {
-            adjacentFlags++;
-          }
+        for (let dc = -1; dc <= 1; dc++) {
+            if (dr === 0 && dc === 0) continue;
+            const nr = row + dr;
+            const nc = col + dc;
+            if (nr >= 0 && nr < newBoard.length && nc >= 0 && nc < newBoard[0].length && newBoard[nr][nc].isVisible) {
+                if (newBoard[nr][nc].isFlagged) {
+                    adjacentFlags++;
+                } else if (!newBoard[nr][nc].isRevealed) {
+                    neighborsToReveal.push({ r: nr, c: nc });
+                }
+            }
         }
-      }
     }
-  
+
     if (adjacentFlags !== tile.adjacentMines) {
-      return;
+        return;
     }
-  
+
     let gameOver = false;
-    let anyRevealed = false;
-
-    for (const neighbor of neighbors) {
-        const {r, c} = neighbor;
-        const neighborTile = newBoard[r][c];
-
-        if (!neighborTile.isRevealed && !neighborTile.isFlagged) {
-            if (neighborTile.isMine) {
-                gameOver = true;
-                break;
-            }
-            if (neighborTile.adjacentMines === 0) {
-                const { board: floodedBoard } = floodFill(newBoard, r, c);
-                newBoard = floodedBoard;
-            } else {
-                newBoard[r][c].isRevealed = true;
-            }
-            anyRevealed = true;
+    for (const { r, c } of neighborsToReveal) {
+        if (newBoard[r][c].isMine) {
+            gameOver = true;
+            break;
         }
     }
-
+    
     if (gameOver) {
         newBoard.forEach(r => r.forEach(c => {
             if (c.isMine) c.isRevealed = true;
@@ -214,17 +201,32 @@ export default function EuroSweeper() {
         return;
     }
 
-    if (anyRevealed) {
-        let currentRevealedCount = 0;
-        newBoard.forEach(r => r.forEach(tile => {
-            if (tile.isRevealed) {
-            currentRevealedCount++;
-            }
-        }));
+    let boardAfterChord = newBoard;
+    let anyRevealed = false;
 
-        setBoard(newBoard);
-        setRevealedCount(currentRevealedCount);
-        checkWinCondition(currentRevealedCount);
+    for (const { r, c } of neighborsToReveal) {
+        if (!boardAfterChord[r][c].isRevealed) {
+            anyRevealed = true;
+            if (boardAfterChord[r][c].adjacentMines === 0) {
+                const { board: floodedBoard } = floodFill(boardAfterChord, r, c);
+                boardAfterChord = floodedBoard;
+            } else {
+                boardAfterChord[r][c].isRevealed = true;
+            }
+        }
+    }
+
+    if (anyRevealed) {
+      let currentRevealedCount = 0;
+      boardAfterChord.forEach(r => r.forEach(tile => {
+          if (tile.isRevealed) {
+              currentRevealedCount++;
+          }
+      }));
+      
+      setBoard(boardAfterChord);
+      setRevealedCount(currentRevealedCount);
+      checkWinCondition(currentRevealedCount);
     }
   };
 
