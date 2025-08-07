@@ -6,6 +6,7 @@ import type { Tile as TileType } from '@/lib/game';
 
 interface TileProps extends TileType {
   onClick: () => void;
+  onDoubleClick: () => void;
 }
 
 const numberColors = [
@@ -19,7 +20,7 @@ const numberColors = [
   'text-gray-500', // 8
 ];
 
-export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, onClick }: TileProps) {
+export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, onClick, onDoubleClick }: TileProps) {
   if (!isVisible) {
     return <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 invisible" />;
   }
@@ -42,6 +43,7 @@ export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacen
   return (
     <button
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       disabled={isRevealed && !isFlagged}
       className={cn(
         'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center rounded-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',

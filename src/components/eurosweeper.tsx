@@ -78,7 +78,7 @@ export default function EuroSweeper() {
     if (gameStatus !== 'playing') return;
 
     const tile = board[row][col];
-    if (tile.isRevealed) return;
+    if (tile.isRevealed && !isFlagging) return;
 
     const newBoard = board.map(r => r.map(c => ({ ...c })));
 
@@ -120,6 +120,40 @@ export default function EuroSweeper() {
     setRevealedCount(newRevealedCount);
     checkWinCondition(newRevealedCount);
   };
+  
+  const handleTileDoubleClick = (row: number, col: number) => {
+    if (gameStatus !== 'playing') return;
+
+    const tile = board[row][col];
+    if (!tile.isRevealed || tile.adjacentMines === 0) return;
+
+    let adjacentFlags = 0;
+    const neighbors: {r: number, c: number}[] = [];
+
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = row + dr;
+        const nc = col + dc;
+
+        if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length) {
+          neighbors.push({ r: nr, c: nc });
+          if (board[nr][nc].isFlagged) {
+            adjacentFlags++;
+          }
+        }
+      }
+    }
+
+    if (adjacentFlags === tile.adjacentMines) {
+       neighbors.forEach(({ r, c }) => {
+        if (!board[r][c].isRevealed && !board[r][c].isFlagged) {
+          handleTileClick(r, c);
+        }
+      });
+    }
+  };
+
 
   const handleNextCountry = (countryKey: string) => {
     const nextCountry = countries[countryKey];
@@ -157,7 +191,7 @@ export default function EuroSweeper() {
         </div>
       </div>
       
-      <GameBoard board={board} onTileClick={handleTileClick} />
+      <GameBoard board={board} onTileClick={handleTileClick} onTileDoubleClick={handleTileDoubleClick} />
       
       <AlertDialog open={gameStatus === 'won' || gameStatus === 'lost'}>
         <AlertDialogContent>
