@@ -47,12 +47,12 @@ export const countries: { [key: string]: Country } = {
       [0,0,0,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0],
       [0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0],
     ],
-    mines: 40,
+    mines: 20,
     adjacent: ["portugal", "france"],
   },
   france: {
     name: "France",
-    mines: 50,
+    mines: 30,
     adjacent: ["spain", "belgium", "luxembourg", "germany", "switzerland", "italy"],
     shape: [
       [0,0,0,1,1,1,1,1,1,1,1,0],
@@ -67,16 +67,17 @@ export const countries: { [key: string]: Country } = {
   },
   belgium: {
     name: "Belgium",
-    mines: 10,
+    mines: 2,
     adjacent: ["france", "luxembourg", "germany"],
     shape: [
-      [1,1,1],
-      [1,1,1],
+      [1,1,1,1],
+      [1,1,1,1],
+      [1,1,1,1],
     ]
   },
   luxembourg: {
     name: "Luxembourg",
-    mines: 2,
+    mines: 0,
     adjacent: ["france", "belgium", "germany"],
     shape: [
       [1]
@@ -84,7 +85,7 @@ export const countries: { [key: string]: Country } = {
   },
   germany: {
     name: "Germany",
-    mines: 45,
+    mines: 35,
     adjacent: ["france", "belgium", "luxembourg", "switzerland", "italy"],
     shape: [
       [0,1,1,1,1,1,0],
@@ -97,7 +98,7 @@ export const countries: { [key: string]: Country } = {
   },
   switzerland: {
     name: "Switzerland",
-    mines: 12,
+    mines: 5,
     adjacent: ["france", "germany", "italy"],
     shape: [
       [0,1,1,0],
@@ -107,7 +108,7 @@ export const countries: { [key: string]: Country } = {
   },
   italy: {
     name: "Italy",
-    mines: 35,
+    mines: 15,
     adjacent: ["france", "switzerland", "germany"],
     shape: [
       [0,1,1,0],

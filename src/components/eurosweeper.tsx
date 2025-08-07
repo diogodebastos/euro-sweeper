@@ -132,32 +132,30 @@ export default function EuroSweeper() {
   
   const handleTileClick = (row: number, col: number) => {
     if (gameStatus !== 'playing') return;
-  
+
     const currentTile = board[row][col];
-    
-    if (isFlagging) {
-      if (!currentTile.isRevealed) {
-        const newBoard = board.map(r => r.map(c => ({ ...c })));
-        const tileToUpdate = newBoard[row][col];
-        const isNowFlagged = !tileToUpdate.isFlagged;
-        tileToUpdate.isFlagged = isNowFlagged;
-        setFlagCount(prev => prev + (isNowFlagged ? 1 : -1));
-        setBoard(newBoard);
-      }
-      return;
-    }
-    
-    if (currentTile.isFlagged) {
-      return;
-    }
-    
+
     if (currentTile.isRevealed) {
       if (isChording && currentTile.adjacentMines > 0) {
         handleChord(row, col);
       }
       return;
     }
-  
+
+    if (isFlagging) {
+      const newBoard = board.map(r => r.map(c => ({ ...c })));
+      const tileToUpdate = newBoard[row][col];
+      const isNowFlagged = !tileToUpdate.isFlagged;
+      tileToUpdate.isFlagged = isNowFlagged;
+      setFlagCount(prev => prev + (isNowFlagged ? 1 : -1));
+      setBoard(newBoard);
+      return;
+    }
+
+    if (currentTile.isFlagged) {
+      return;
+    }
+
     if (currentTile.isMine) {
       setGameStatus('lost');
       const newBoard = board.map(r => r.map(c => ({...c})));
@@ -167,7 +165,7 @@ export default function EuroSweeper() {
       setBoard(newBoard);
       return;
     }
-  
+
     let { board: newBoard, revealedCount: newTotalRevealed } = floodFill(board, row, col);
     setBoard(newBoard);
     setRevealedCount(newTotalRevealed);
