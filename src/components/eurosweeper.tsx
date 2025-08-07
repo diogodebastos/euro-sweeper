@@ -110,29 +110,29 @@ export default function EuroSweeper() {
   }, [totalNonMineTiles]);
   
   const handleTileClick = (row: number, col: number) => {
-    if (gameStatus !== 'playing' || board[row][col].isFlagged) return;
+    if (gameStatus !== 'playing') return;
   
     const currentTile = board[row][col];
     
-    // Chording logic
-    if (isChording && currentTile.isRevealed && currentTile.adjacentMines > 0) {
-      handleChord(row, col);
-      return;
-    }
-  
-    // Default click behavior
+    // Flagging logic comes first.
     if (isFlagging) {
       if (!currentTile.isRevealed) {
         const newBoard = board.map(r => r.map(c => ({ ...c })));
-        const isFlagged = !newBoard[row][col].isFlagged;
-        newBoard[row][col].isFlagged = isFlagged;
-        setFlagCount(prev => prev + (isFlagged ? 1 : -1));
+        const tileToUpdate = newBoard[row][col];
+        const isNowFlagged = !tileToUpdate.isFlagged;
+        tileToUpdate.isFlagged = isNowFlagged;
+        setFlagCount(prev => prev + (isNowFlagged ? 1 : -1));
         setBoard(newBoard);
       }
-      return;
+      return; // Exit after handling flag
     }
-
-    if (currentTile.isRevealed) {
+    
+    // If not flagging, and tile is flagged or already revealed, do nothing.
+    if (currentTile.isFlagged || currentTile.isRevealed) {
+      // Unless it's a chording attempt on a revealed tile
+      if (isChording && currentTile.isRevealed && currentTile.adjacentMines > 0) {
+        handleChord(row, col);
+      }
       return;
     }
   
