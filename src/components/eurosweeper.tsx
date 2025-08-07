@@ -48,6 +48,22 @@ export default function EuroSweeper() {
     startGame(countries.portugal);
   }, [startGame]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // We don't want to toggle flag mode if the user is typing in an input.
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      if (e.key.toLowerCase() === 'f') {
+        setIsFlagging(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   const checkWinCondition = useCallback((newRevealedCount: number) => {
     if (newRevealedCount === totalNonMineTiles) {
       setGameStatus('won');
@@ -123,7 +139,7 @@ export default function EuroSweeper() {
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
-              <span>Flag Mode</span>
+              <span>Flag Mode (F)</span>
             </Label>
             <Switch
               id="flag-mode"
