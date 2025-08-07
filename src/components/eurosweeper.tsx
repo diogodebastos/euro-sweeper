@@ -83,6 +83,14 @@ export default function EuroSweeper() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameStatus === 'lost' && e.key === ' ') {
+        e.preventDefault();
+        startGame(currentCountry);
+        return;
+      }
+      
+      if (gameStatus !== 'playing') return;
+
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -100,7 +108,7 @@ export default function EuroSweeper() {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, []);
+  }, [gameStatus, startGame, currentCountry]);
 
   const checkWinCondition = useCallback((currentRevealedCount: number) => {
     if (currentRevealedCount > 0 && currentRevealedCount === totalNonMineTiles) {
@@ -198,16 +206,17 @@ export default function EuroSweeper() {
     }
     
     let finalRevealedCount = revealedCount;
+    let intermediateBoard = newBoard;
 
     for (const neighbor of neighborsToReveal) {
-      if (!newBoard[neighbor.r][neighbor.c].isRevealed) {
-        const { board: floodedBoard, revealedCount: updatedCount } = floodFill(newBoard, neighbor.r, neighbor.c);
-        newBoard = floodedBoard;
+      if (!intermediateBoard[neighbor.r][neighbor.c].isRevealed) {
+        const { board: floodedBoard, revealedCount: updatedCount } = floodFill(intermediateBoard, neighbor.r, neighbor.c);
+        intermediateBoard = floodedBoard;
         finalRevealedCount = updatedCount;
       }
     }
 
-    setBoard(newBoard);
+    setBoard(intermediateBoard);
     setRevealedCount(finalRevealedCount);
     checkWinCondition(finalRevealedCount);
   };
