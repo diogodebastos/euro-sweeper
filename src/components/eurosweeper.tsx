@@ -84,6 +84,22 @@ export default function EuroSweeper() {
   useEffect(() => {
     startGame('portugal');
   }, [startGame]);
+  
+  const checkWinCondition = useCallback((currentRevealedCount: number) => {
+    if (currentRevealedCount > 0 && currentRevealedCount === totalNonMineTiles) {
+      const newBeatenCountries = beatenCountries.includes(currentCountryKey) ? beatenCountries : [...beatenCountries, currentCountryKey];
+      setBeatenCountries(newBeatenCountries);
+
+      const adjacentUnbeaten = currentCountry.adjacent.filter(key => !newBeatenCountries.includes(key));
+
+      if (Object.keys(countries).length !== newBeatenCountries.length && adjacentUnbeaten.length === 1) {
+        handleNextCountry(adjacentUnbeaten[0]);
+      } else {
+        setGameStatus('won');
+      }
+    }
+  }, [totalNonMineTiles, beatenCountries, currentCountryKey, currentCountry.adjacent]);
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -113,15 +129,6 @@ export default function EuroSweeper() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [gameStatus, startGame, currentCountryKey]);
-
-  const checkWinCondition = useCallback((currentRevealedCount: number) => {
-    if (currentRevealedCount > 0 && currentRevealedCount === totalNonMineTiles) {
-      setGameStatus('won');
-      if (!beatenCountries.includes(currentCountryKey)) {
-        setBeatenCountries(prev => [...prev, currentCountryKey]);
-      }
-    }
-  }, [totalNonMineTiles, beatenCountries, currentCountryKey]);
   
   const handleTileClick = (row: number, col: number) => {
     if (gameStatus !== 'playing') return;
@@ -197,7 +204,7 @@ export default function EuroSweeper() {
 
     for (const neighbor of neighborsToReveal) {
         const { r, c } = neighbor;
-        if (newBoard[r][c].isMine) {
+        if (newBoard[r][c].isMine && !newBoard[r][c].isFlagged) {
             hitMine = true;
             break;
         }
@@ -215,7 +222,7 @@ export default function EuroSweeper() {
     let intermediateBoard = newBoard;
 
     for (const neighbor of neighborsToReveal) {
-      if (!intermediateBoard[neighbor.r][neighbor.c].isRevealed) {
+      if (!intermediateBoard[neighbor.r][neighbor.c].isRevealed && !intermediateBoard[neighbor.r][neighbor.c].isFlagged) {
         const { board: floodedBoard, revealedCount: updatedCount } = floodFill(intermediateBoard, neighbor.r, neighbor.c);
         intermediateBoard = floodedBoard;
         finalRevealedCount = updatedCount;
@@ -282,7 +289,7 @@ export default function EuroSweeper() {
         return {
           title: "Congratulations! You've swept the entire Europe!",
           description: "You are a true EuroSweeper champion!",
-          actions: <AlertDialogAction onClick={() => setBeatenCountries([])}>Play Again</AlertDialogAction>
+          actions: <AlertDialogAction onClick={() => { setBeatenCountries([]); startGame('portugal'); }}>Play Again</AlertDialogAction>
         };
       }
       return {
