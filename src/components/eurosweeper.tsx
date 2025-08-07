@@ -18,6 +18,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Flag, Bomb, RefreshCw } from 'lucide-react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type GameStatus = 'playing' | 'won' | 'lost';
 
@@ -118,6 +119,7 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex items-center space-x-4">
+           <ThemeToggle />
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
