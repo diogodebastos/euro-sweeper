@@ -37,12 +37,44 @@ export default function EuroSweeper() {
 
   const startGame = useCallback((country: Country) => {
     setCurrentCountry(country);
-    const newBoard = createBoard(country.shape, country.mines);
-    setBoard(newBoard);
+    let newBoard = createBoard(country.shape, country.mines);
     setGameStatus('playing');
-    setRevealedCount(0);
     setFlagCount(0);
     setIsFlagging(false);
+
+    // Auto-reveal first safe square
+    const safeTiles: { row: number, col: number }[] = [];
+    const zeroMineTiles: { row: number, col: number }[] = [];
+
+    newBoard.forEach((row, r) => {
+      row.forEach((tile, c) => {
+        if (tile.isVisible && !tile.isMine) {
+          safeTiles.push({ row: r, col: c });
+          if (tile.adjacentMines === 0) {
+            zeroMineTiles.push({ row: r, col: c });
+          }
+        }
+      });
+    });
+
+    let firstMove;
+    if (zeroMineTiles.length > 0) {
+      firstMove = zeroMineTiles[Math.floor(Math.random() * zeroMineTiles.length)];
+    } else if (safeTiles.length > 0) {
+      firstMove = safeTiles[Math.floor(Math.random() * safeTiles.length)];
+    }
+
+    if (firstMove) {
+      const { row, col } = firstMove;
+      const { board: revealedBoard, revealedCount } = floodFill(newBoard, row, col);
+      setBoard(revealedBoard);
+      setRevealedCount(revealedCount);
+      checkWinCondition(revealedCount);
+    } else {
+      // No safe tiles found (unlikely, but handle it)
+      setBoard(newBoard);
+      setRevealedCount(0);
+    }
   }, []);
 
   useEffect(() => {
@@ -51,7 +83,6 @@ export default function EuroSweeper() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // We don't want to toggle if the user is typing in an input.
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         return;
       }
@@ -249,4 +280,3 @@ export default function EuroSweeper() {
       </AlertDialog>
     </div>
   );
-}
