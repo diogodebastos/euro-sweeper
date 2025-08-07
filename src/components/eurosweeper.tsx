@@ -119,6 +119,7 @@ export default function EuroSweeper() {
         const isFlagged = !newBoard[row][col].isFlagged;
         newBoard[row][col].isFlagged = isFlagged;
         setFlagCount(prev => prev + (isFlagged ? 1 : -1));
+        // We will check for auto-chording after this returns
       }
       return { board: newBoard, newlyRevealed, gameOver };
     }
@@ -159,6 +160,25 @@ export default function EuroSweeper() {
   
   const processTileClick = (row: number, col: number) => {
      if (gameStatus !== 'playing') return;
+
+     if (isFlagging) {
+        const newBoard = board.map(r => r.map(c => ({...c})));
+        if (!newBoard[row][col].isRevealed) {
+          const isFlagged = !newBoard[row][col].isFlagged;
+          newBoard[row][col].isFlagged = isFlagged;
+          setFlagCount(prev => prev + (isFlagged ? 1 : -1));
+          
+          let { board: finalBoard, newlyRevealed, gameOver } = autoChord(newBoard, row, col);
+          
+          if(gameOver) {
+            setBoard(finalBoard);
+          } else {
+            updateGameAfterClick(finalBoard, newlyRevealed);
+          }
+        }
+        return;
+     }
+
      const { board: newBoard, newlyRevealed, gameOver } = handleTileClick(row, col, board);
      if (!gameOver) {
        updateGameAfterClick(newBoard, newlyRevealed);
@@ -167,12 +187,34 @@ export default function EuroSweeper() {
      }
   };
 
-  const handleTileDoubleClick = (row: number, col: number) => {
-    if (gameStatus !== 'playing') return;
+  const autoChord = (currentBoard: Board, row: number, col: number) => {
+    let boardCopy = currentBoard.map(r => r.map(c => ({...c})));
+    let totalNewlyRevealed = 0;
+    let gameOver = false;
   
-    const tile = board[row][col];
-    if (!tile.isRevealed || tile.adjacentMines === 0) return;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        const nr = row + dr;
+        const nc = col + dc;
   
+        if (nr >= 0 && nr < boardCopy.length && nc >= 0 && nc < boardCopy[0].length && boardCopy[nr][nc].isRevealed && boardCopy[nr][nc].adjacentMines > 0) {
+          const { board: chordedBoard, newlyRevealed, gameOver: isGameOver } = handleChord(nr, nc, boardCopy);
+          boardCopy = chordedBoard;
+          totalNewlyRevealed += newlyRevealed;
+          if (isGameOver) {
+            gameOver = true;
+            break;
+          }
+        }
+      }
+      if (gameOver) break;
+    }
+  
+    return { board: boardCopy, newlyRevealed: totalNewlyRevealed, gameOver };
+  }
+
+  const handleChord = (row: number, col: number, currentBoard: Board) => {
+    const tile = currentBoard[row][col];
     let adjacentFlags = 0;
     const neighbors: {r: number, c: number}[] = [];
   
@@ -182,9 +224,9 @@ export default function EuroSweeper() {
         const nr = row + dr;
         const nc = col + dc;
   
-        if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length && board[nr][nc].isVisible) {
+        if (nr >= 0 && nr < currentBoard.length && nc >= 0 && nc < currentBoard[0].length && currentBoard[nr][nc].isVisible) {
           neighbors.push({ r: nr, c: nc });
-          if (board[nr][nc].isFlagged) {
+          if (currentBoard[nr][nc].isFlagged) {
             adjacentFlags++;
           }
         }
@@ -192,14 +234,14 @@ export default function EuroSweeper() {
     }
   
     if (adjacentFlags === tile.adjacentMines) {
-      let currentBoard = board.map(r => r.map(c => ({ ...c })));
+      let boardCopy = currentBoard.map(r => r.map(c => ({ ...c })));
       let totalNewlyRevealed = 0;
       let gameOver = false;
   
       for (const { r, c } of neighbors) {
-        if (!currentBoard[r][c].isRevealed && !currentBoard[r][c].isFlagged) {
-          const result = handleTileClick(r, c, currentBoard);
-          currentBoard = result.board;
+        if (!boardCopy[r][c].isRevealed && !boardCopy[r][c].isFlagged) {
+          const result = handleTileClick(r, c, boardCopy);
+          boardCopy = result.board;
           totalNewlyRevealed += result.newlyRevealed;
           if (result.gameOver) {
             gameOver = true;
@@ -207,15 +249,10 @@ export default function EuroSweeper() {
           }
         }
       }
-      
-      if (gameOver) {
-        setBoard(currentBoard);
-      } else {
-        updateGameAfterClick(currentBoard, totalNewlyRevealed);
-      }
+      return { board: boardCopy, newlyRevealed: totalNewlyRevealed, gameOver };
     }
-  };
-
+    return { board: currentBoard, newlyRevealed: 0, gameOver: false };
+  }
 
   const handleNextCountry = (countryKey: string) => {
     const nextCountry = countries[countryKey];
@@ -253,7 +290,7 @@ export default function EuroSweeper() {
         </div>
       </div>
       
-      <GameBoard board={board} onTileClick={processTileClick} onTileDoubleClick={handleTileDoubleClick} />
+      <GameBoard board={board} onTileClick={processTileClick} />
       
       <AlertDialog open={gameStatus === 'won' || gameStatus === 'lost'}>
         <AlertDialogContent>
