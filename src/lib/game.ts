@@ -70,7 +70,6 @@ export function floodFill(board: Board, row: number, col: number): { board: Boar
   const rows = board.length;
   const cols = board[0].length;
   const newBoard = board.map(r => r.map(c => ({ ...c })));
-  let revealedCount = 0;
 
   const stack: [number, number][] = [[row, col]];
   const visited = new Set<string>();
@@ -79,11 +78,10 @@ export function floodFill(board: Board, row: number, col: number): { board: Boar
   while (stack.length > 0) {
     const [r, c] = stack.pop()!;
 
-    if (!newBoard[r][c].isRevealed) {
-      newBoard[r][c].isRevealed = true;
-      newBoard[r][c].isFlagged = false;
-      revealedCount++;
-    }
+    if (newBoard[r][c].isRevealed) continue;
+
+    newBoard[r][c].isRevealed = true;
+    newBoard[r][c].isFlagged = false;
 
     if (newBoard[r][c].adjacentMines === 0) {
       for (let dr = -1; dr <= 1; dr++) {
@@ -103,5 +101,15 @@ export function floodFill(board: Board, row: number, col: number): { board: Boar
     }
   }
 
-  return { board: newBoard, revealedCount };
+  // After flood fill, we need to recount all revealed tiles to get the new total
+  let totalRevealed = 0;
+  newBoard.forEach(row => {
+    row.forEach(tile => {
+      if (tile.isRevealed) {
+        totalRevealed++;
+      }
+    });
+  });
+
+  return { board: newBoard, revealedCount: totalRevealed };
 }
