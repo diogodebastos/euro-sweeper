@@ -193,12 +193,14 @@ export default function EuroSweeper() {
     
     let newBoard = board.map(r => r.map(c => ({ ...c })));
     let hitMine = false;
+    let finalRevealedCount = revealedCount;
 
-    for(const neighbor of neighborsToReveal) {
-      if (newBoard[neighbor.r][neighbor.c].isMine) {
-        hitMine = true;
-        break;
-      }
+    for (const neighbor of neighborsToReveal) {
+        const { r, c } = neighbor;
+        if (newBoard[r][c].isMine) {
+            hitMine = true;
+            break;
+        }
     }
     
     if (hitMine) {
@@ -210,7 +212,6 @@ export default function EuroSweeper() {
       return;
     }
     
-    let finalRevealedCount = revealedCount;
     let intermediateBoard = newBoard;
 
     for (const neighbor of neighborsToReveal) {
@@ -233,6 +234,12 @@ export default function EuroSweeper() {
 
   const renderNextCountryButtons = () => {
     const adjacentUnbeaten = currentCountry.adjacent.filter(key => !beatenCountries.includes(key));
+    const allUnbeaten = Object.keys(countries).filter(key => !beatenCountries.includes(key) && key !== currentCountryKey);
+    const allCountriesBeaten = Object.keys(countries).length === beatenCountries.length;
+
+    if (allCountriesBeaten) {
+       return null;
+    }
 
     if (adjacentUnbeaten.length > 0) {
       return adjacentUnbeaten.map(key => (
@@ -241,8 +248,6 @@ export default function EuroSweeper() {
         </AlertDialogAction>
       ));
     }
-    
-    const allUnbeaten = Object.keys(countries).filter(key => !beatenCountries.includes(key) && key !== currentCountryKey);
     
     if (allUnbeaten.length > 0) {
       return (
@@ -259,8 +264,38 @@ export default function EuroSweeper() {
       );
     }
     
-    return <AlertDialogDescription>Congratulations! You've sweep the entire Europe!</AlertDialogDescription>;
+    return null;
   }
+  
+  const getDialogContent = () => {
+    if (gameStatus === 'lost') {
+      return {
+        title: 'Game Over!',
+        description: 'You clicked on a mine. Better luck next time! Press Space to try again.',
+        actions: <AlertDialogAction onClick={() => startGame(currentCountryKey)}>Try Again</AlertDialogAction>
+      };
+    }
+
+    if (gameStatus === 'won') {
+      const allCountriesBeaten = Object.keys(countries).length === beatenCountries.length;
+      if (allCountriesBeaten) {
+        return {
+          title: "Congratulations! You've swept the entire Europe!",
+          description: "You are a true EuroSweeper champion!",
+          actions: <AlertDialogAction onClick={() => setBeatenCountries([])}>Play Again</AlertDialogAction>
+        };
+      }
+      return {
+        title: `You've cleared ${currentCountry.name}!`,
+        description: 'Ready for your next challenge? Choose an adjacent country to continue your European tour.',
+        actions: renderNextCountryButtons()
+      };
+    }
+    
+    return { title: '', description: '', actions: null };
+  }
+
+  const { title, description, actions } = getDialogContent();
 
   return (
     <div className="flex flex-col items-center">
@@ -307,19 +342,11 @@ export default function EuroSweeper() {
       <AlertDialog open={gameStatus === 'won' || gameStatus === 'lost'}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {gameStatus === 'won' ? `Congratulations! You've cleared ${currentCountry.name}!` : 'Game Over!'}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {gameStatus === 'won' ? 'Ready for your next challenge? Choose an adjacent country to continue your European tour.' : 'You clicked on a mine. Better luck next time! Press Space to try again.'}
-            </AlertDialogDescription>
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            {gameStatus === 'won' ? (
-              renderNextCountryButtons()
-            ) : (
-               <AlertDialogAction onClick={() => startGame(currentCountryKey)}>Try Again</AlertDialogAction>
-            )}
+            {actions}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
