@@ -110,6 +110,14 @@ export default function EuroSweeper() {
   const handleTileClick = (row: number, col: number) => {
     if (gameStatus !== 'playing') return;
   
+    const currentTile = board[row][col];
+    
+    // Chording logic: If a revealed tile with a number is clicked
+    if (currentTile.isRevealed && currentTile.adjacentMines > 0 && !isFlagging) {
+      handleChord(row, col);
+      return;
+    }
+
     let newBoard = board.map(r => r.map(c => ({ ...c })));
     const tile = newBoard[row][col];
   
@@ -121,12 +129,6 @@ export default function EuroSweeper() {
         setFlagCount(prev => prev + (isFlagged ? 1 : -1));
         setBoard(newBoard);
       }
-      return;
-    }
-  
-    // If tile is already revealed, try chording
-    if (tile.isRevealed && tile.adjacentMines > 0) {
-      handleChord(row, col);
       return;
     }
   
@@ -159,13 +161,11 @@ export default function EuroSweeper() {
   
   const handleChord = (row: number, col: number) => {
     const tile = board[row][col];
-    if (!tile.isRevealed || tile.adjacentMines === 0) {
-      return;
-    }
-  
+    
     let adjacentFlags = 0;
     for (let dr = -1; dr <= 1; dr++) {
       for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
         const nr = row + dr;
         const nc = col + dc;
         if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length && board[nr][nc].isFlagged) {
@@ -196,8 +196,7 @@ export default function EuroSweeper() {
               boardCopy.forEach(r => r.forEach(c => { if (c.isMine) c.isRevealed = true; }));
               break;
             }
-            if (neighbor.adjacentMines === 0) {
-              // The floodFill result contains the entire updated board and count
+            if (neighbor.adjacentMines === 0 && !neighbor.isRevealed) {
               const { board: floodedBoard, revealedCount: totalRevealed } = floodFill(boardCopy, nr, nc);
               boardCopy = floodedBoard;
               newRevealedCount = totalRevealed;
