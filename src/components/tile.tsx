@@ -42,14 +42,15 @@ export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacen
   return (
     <button
       onClick={onClick}
-      disabled={isRevealed && !isFlagged}
+      disabled={isRevealed && isFlagged}
       className={cn(
         'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center rounded-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',
         {
           'bg-secondary hover:bg-muted cursor-pointer': !isRevealed,
-          'bg-background border border-muted': isRevealed && !isMine,
+          'bg-background border border-muted': isRevealed && !isMine && !isFlagged,
           'bg-destructive': isRevealed && isMine,
-          'cursor-default': isRevealed,
+          'cursor-pointer': isRevealed && !isFlagged, // Allow clicking on revealed numbers
+          'cursor-default': isRevealed && isFlagged,
         }
       )}
       aria-label={`Tile at row, col. Status: ${isRevealed ? 'Revealed' : 'Hidden'}`}

@@ -17,7 +17,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Flag, Bomb, RefreshCw } from 'lucide-react';
+import { Flag, Bomb, RefreshCw, Zap } from 'lucide-react';
 import { ThemeToggle, type ThemeToggleHandle } from '@/components/theme-toggle';
 
 type GameStatus = 'playing' | 'won' | 'lost';
@@ -27,6 +27,7 @@ export default function EuroSweeper() {
   const [board, setBoard] = useState<Board>([]);
   const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
   const [isFlagging, setIsFlagging] = useState(false);
+  const [isChording, setIsChording] = useState(false);
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
   const themeToggleRef = useRef<ThemeToggleHandle>(null);
@@ -41,6 +42,7 @@ export default function EuroSweeper() {
     setGameStatus('playing');
     setFlagCount(0);
     setIsFlagging(false);
+    setIsChording(false);
 
     // Auto-reveal first safe square
     const safeTiles: { row: number, col: number }[] = [];
@@ -88,6 +90,9 @@ export default function EuroSweeper() {
       if (e.key.toLowerCase() === 'f') {
         setIsFlagging(prev => !prev);
       }
+      if (e.key.toLowerCase() === 'c') {
+        setIsChording(prev => !prev);
+      }
       if (e.key.toLowerCase() === 'd') {
         themeToggleRef.current?.toggle();
       }
@@ -105,36 +110,35 @@ export default function EuroSweeper() {
   }, [totalNonMineTiles]);
   
   const handleTileClick = (row: number, col: number) => {
-    if (gameStatus !== 'playing') return;
+    if (gameStatus !== 'playing' || board[row][col].isFlagged) return;
   
     const currentTile = board[row][col];
     
-    // Chording logic: If a revealed tile with a number is clicked
-    if (currentTile.isRevealed && currentTile.adjacentMines > 0 && !isFlagging) {
+    // Chording logic
+    if (isChording && currentTile.isRevealed && currentTile.adjacentMines > 0) {
       handleChord(row, col);
       return;
     }
-
-    let newBoard = board.map(r => r.map(c => ({ ...c })));
-    const tile = newBoard[row][col];
   
-    // Flagging mode
+    // Default click behavior
     if (isFlagging) {
-      if (!tile.isRevealed) {
-        const isFlagged = !tile.isFlagged;
+      if (!currentTile.isRevealed) {
+        const newBoard = board.map(r => r.map(c => ({ ...c })));
+        const isFlagged = !newBoard[row][col].isFlagged;
         newBoard[row][col].isFlagged = isFlagged;
         setFlagCount(prev => prev + (isFlagged ? 1 : -1));
         setBoard(newBoard);
       }
       return;
     }
-  
-    if (tile.isFlagged || tile.isRevealed) {
+
+    if (currentTile.isRevealed) {
       return;
     }
   
-    if (tile.isMine) {
+    if (currentTile.isMine) {
       setGameStatus('lost');
+      const newBoard = board.map(r => r.map(c => ({...c})));
       newBoard.forEach(r => r.forEach(c => {
         if (c.isMine) c.isRevealed = true;
       }));
@@ -142,115 +146,70 @@ export default function EuroSweeper() {
       return;
     }
   
-    if (tile.adjacentMines === 0) {
-      const { board: floodedBoard, revealedCount: newTotalRevealed } = floodFill(newBoard, row, col);
-      setBoard(floodedBoard);
-      setRevealedCount(newTotalRevealed);
-      checkWinCondition(newTotalRevealed);
-    } else {
-      newBoard[row][col].isRevealed = true;
-      const newRevealed = revealedCount + 1;
-      setBoard(newBoard);
-      setRevealedCount(newRevealed);
-      checkWinCondition(newRevealed);
-    }
+    let { board: newBoard, revealedCount: newTotalRevealed } = floodFill(board, row, col);
+    setBoard(newBoard);
+    setRevealedCount(newTotalRevealed);
+    checkWinCondition(newTotalRevealed);
   };
   
   const handleChord = (row: number, col: number) => {
     const tile = board[row][col];
-    const neighbors = [];
     let adjacentFlags = 0;
+    const neighborsToReveal: {r: number, c: number}[] = [];
 
     for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-            if (dr === 0 && dc === 0) continue;
-            const nr = row + dr;
-            const nc = col + dc;
-            if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length && board[nr][nc].isVisible) {
-                neighbors.push(board[nr][nc]);
-                if (board[nr][nc].isFlagged) {
-                    adjacentFlags++;
-                }
-            }
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const nr = row + dr;
+        const nc = col + dc;
+        if (nr >= 0 && nr < board.length && nc >= 0 && nc < board[0].length && board[nr][nc].isVisible) {
+          if (board[nr][nc].isFlagged) {
+            adjacentFlags++;
+          } else if (!board[nr][nc].isRevealed) {
+            neighborsToReveal.push({r: nr, c: nc});
+          }
         }
+      }
     }
 
     if (adjacentFlags !== tile.adjacentMines) {
-        return;
-    }
-
-    let newBoard = board.map(r => r.map(c => ({...c})));
-    let currentRevealedCount = revealedCount;
-    let gameOver = false;
-
-    // First, check for incorrect flags
-    for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-            if (dr === 0 && dc === 0) continue;
-            const nr = row + dr;
-            const nc = col + dc;
-             if (nr >= 0 && nr < newBoard.length && nc >= 0 && nc < newBoard[0].length && newBoard[nr][nc].isVisible) {
-                if (newBoard[nr][nc].isFlagged && !newBoard[nr][nc].isMine) {
-                    gameOver = true;
-                    break;
-                }
-            }
-        }
-        if (gameOver) break;
-    }
-
-    if (gameOver) {
-        newBoard.forEach(r => r.forEach(c => {
-            if (c.isMine) c.isRevealed = true;
-        }));
-        setBoard(newBoard);
-        setGameStatus('lost');
-        return;
+      return;
     }
     
-    // If flags are correct, reveal neighbors
-    for (let dr = -1; dr <= 1; dr++) {
-        for (let dc = -1; dc <= 1; dc++) {
-             if (dr === 0 && dc === 0) continue;
-             const nr = row + dr;
-             const nc = col + dc;
-             if (nr >= 0 && nr < newBoard.length && nc >= 0 && nc < newBoard[0].length && newBoard[nr][nc].isVisible) {
-                const neighbor = newBoard[nr][nc];
-                if (!neighbor.isRevealed && !neighbor.isFlagged) {
-                    if (neighbor.isMine) {
-                       // This case should not be reached if flags are correct, but as a safeguard
-                       gameOver = true;
-                       break;
-                    }
-                    if (neighbor.adjacentMines === 0) {
-                        const { board: floodedBoard, revealedCount: updatedRevealed } = floodFill(newBoard, nr, nc);
-                        newBoard = floodedBoard;
-                        currentRevealedCount = updatedRevealed;
-                    } else if (!newBoard[nr][nc].isRevealed) {
-                        newBoard[nr][nc].isRevealed = true;
-                        // Recalculate total revealed
-                        currentRevealedCount = newBoard.flat().filter(t => t.isRevealed).length;
-                    }
-                }
-            }
-        }
-        if(gameOver) break;
+    let newBoard = board.map(r => r.map(c => ({ ...c })));
+    let hitMine = false;
+
+    for(const neighbor of neighborsToReveal) {
+      if (newBoard[neighbor.r][neighbor.c].isMine) {
+        hitMine = true;
+        break;
+      }
     }
     
-    if (gameOver) {
-        newBoard.forEach(r => r.forEach(c => {
-            if (c.isMine) c.isRevealed = true;
-        }));
-        setBoard(newBoard);
-        setGameStatus('lost');
-        return;
+    if (hitMine) {
+      newBoard.forEach(r => r.forEach(tile => {
+        if (tile.isMine) tile.isRevealed = true;
+      }));
+      setBoard(newBoard);
+      setGameStatus('lost');
+      return;
+    }
+    
+    let finalRevealedCount = revealedCount;
+
+    for (const neighbor of neighborsToReveal) {
+      if (!newBoard[neighbor.r][neighbor.c].isRevealed) {
+        const { board: floodedBoard, revealedCount: updatedCount } = floodFill(newBoard, neighbor.r, neighbor.c);
+        newBoard = floodedBoard;
+        finalRevealedCount = updatedCount;
+      }
     }
 
-    const finalRevealedCount = newBoard.flat().filter(t => t.isRevealed).length;
     setBoard(newBoard);
     setRevealedCount(finalRevealedCount);
     checkWinCondition(finalRevealedCount);
   };
+
 
   const handleNextCountry = (countryKey: string) => {
     const nextCountry = countries[countryKey];
@@ -261,20 +220,20 @@ export default function EuroSweeper() {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border">
-        <div className="mb-4 sm:mb-0">
+      <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4">
+        <div className="flex-shrink-0">
           <h2 className="text-2xl font-bold font-headline text-primary">{currentCountry.name}</h2>
           <div className="flex items-center gap-4 text-muted-foreground mt-1">
             <div className="flex items-center gap-1"><Bomb className="w-4 h-4" /><span>{currentCountry.mines}</span></div>
             <div className="flex items-center gap-1"><Flag className="w-4 h-4" /><span>{flagCount}</span></div>
           </div>
         </div>
-        <div className="flex items-center space-x-4">
-           <ThemeToggle ref={themeToggleRef} />
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <ThemeToggle ref={themeToggleRef} />
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
-              <span>Flag Mode (F)</span>
+              <span>Flag (F)</span>
             </Label>
             <Switch
               id="flag-mode"
@@ -282,7 +241,18 @@ export default function EuroSweeper() {
               onCheckedChange={setIsFlagging}
             />
           </div>
-          <Button variant="outline" size="icon" onClick={() => startGame(currentCountry)}>
+           <div className="flex items-center space-x-2">
+            <Label htmlFor="chord-mode" className="flex items-center gap-2 cursor-pointer">
+              <Zap className="w-5 h-5"/>
+              <span>Chord (C)</span>
+            </Label>
+            <Switch
+              id="chord-mode"
+              checked={isChording}
+              onCheckedChange={setIsChording}
+            />
+          </div>
+          <Button variant="outline" size="icon" onClick={() => startGame(currentCountry)} aria-label="Restart Game">
             <RefreshCw className="w-5 h-5" />
           </Button>
         </div>
