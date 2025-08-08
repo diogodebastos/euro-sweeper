@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Bomb, Flag } from 'lucide-react';
@@ -21,7 +22,7 @@ const numberColors = [
 
 export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, onClick }: TileProps) {
   if (!isVisible) {
-    return <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 invisible" />;
+    return <div className="aspect-square invisible" />;
   }
 
   const renderContent = () => {
@@ -44,7 +45,7 @@ export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacen
       onClick={onClick}
       disabled={isRevealed && isFlagged}
       className={cn(
-        'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 flex items-center justify-center rounded-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',
+        'aspect-square flex items-center justify-center rounded-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',
         {
           'bg-secondary hover:bg-muted cursor-pointer': !isRevealed,
           'bg-background border border-muted': isRevealed && !isMine && !isFlagged,
