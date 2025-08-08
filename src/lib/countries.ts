@@ -104,7 +104,7 @@ export const countries = {
             [1, 1], 
             [1, 1], 
             [1, 1]],
-    mines: 0,
+    mines: 1,
     adjacent: ["france", "belgium", "germany"],
   },
   "germany": {
