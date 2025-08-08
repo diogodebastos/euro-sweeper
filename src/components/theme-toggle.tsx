@@ -13,16 +13,20 @@ export const ThemeToggle = React.forwardRef<ThemeToggleHandle>((props, ref) => {
   const [theme, setThemeState] = React.useState<"light" | "dark">("dark")
 
   React.useEffect(() => {
-    const isDark = theme === "dark";
-    if (isDark) {
-      document.documentElement.classList.add("dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-    }
-  }, [theme])
+    const isDark = document.documentElement.classList.contains("dark");
+    setThemeState(isDark ? "dark" : "light");
+  }, [])
 
   const toggleTheme = () => {
-    setThemeState(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+    setThemeState(prevTheme => {
+      const newTheme = prevTheme === 'dark' ? 'light' : 'dark';
+      if (newTheme === 'dark') {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
+      return newTheme;
+    });
   }
 
   React.useImperativeHandle(ref, () => ({
