@@ -82,7 +82,7 @@ export default function EuroSweeper() {
   }, []);
 
   useEffect(() => {
-    startGame('portugal');
+    startGame('italy');
   }, [startGame]);
   
   const checkWinCondition = useCallback((currentRevealedCount: number) => {

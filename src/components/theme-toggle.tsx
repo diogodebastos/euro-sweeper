@@ -10,18 +10,10 @@ export type ThemeToggleHandle = {
 };
 
 export const ThemeToggle = React.forwardRef<ThemeToggleHandle>((props, ref) => {
-  const [theme, setThemeState] = React.useState<"theme-light" | "dark" | "system">("system")
+  const [theme, setThemeState] = React.useState<"theme-light" | "dark">("dark")
 
   React.useEffect(() => {
-    const isDarkMode = document.documentElement.classList.contains("dark")
-    setThemeState(isDarkMode ? "dark" : "theme-light")
-  }, [])
-
-  React.useEffect(() => {
-    const isDark =
-      theme === "dark" ||
-      (theme === "system" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    const isDark = theme === "dark";
     document.documentElement.classList[isDark ? "add" : "remove"]("dark")
   }, [theme])
 
