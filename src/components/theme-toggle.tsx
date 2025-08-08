@@ -10,7 +10,7 @@ export type ThemeToggleHandle = {
 };
 
 export const ThemeToggle = React.forwardRef<ThemeToggleHandle>((props, ref) => {
-  const [theme, setThemeState] = React.useState<"theme-light" | "dark">("dark")
+  const [theme, setThemeState] = React.useState<"light" | "dark">("dark")
 
   React.useEffect(() => {
     const isDark = theme === "dark";
@@ -22,7 +22,7 @@ export const ThemeToggle = React.forwardRef<ThemeToggleHandle>((props, ref) => {
   }, [theme])
 
   const toggleTheme = () => {
-    setThemeState(prevTheme => prevTheme === 'dark' ? 'theme-light' : 'dark');
+    setThemeState(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   }
 
   React.useImperativeHandle(ref, () => ({
