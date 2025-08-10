@@ -102,6 +102,16 @@ export default function EuroSweeper() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+      
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        startGame(currentCountryKey);
+        return;
+      }
+      
       if (gameStatus === 'lost' && e.key === ' ') {
         e.preventDefault();
         startGame(currentCountryKey);
@@ -110,9 +120,6 @@ export default function EuroSweeper() {
       
       if (gameStatus !== 'playing') return;
 
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
       if (e.key.toLowerCase() === 'f') {
         setIsFlagging(prev => !prev);
       }
@@ -334,7 +341,7 @@ export default function EuroSweeper() {
               onCheckedChange={setIsChording}
             />
           </div>
-          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game">
+          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
             <RefreshCw className="w-5 h-5" />
           </Button>
           <ThemeToggle ref={themeToggleRef} />
