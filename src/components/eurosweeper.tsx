@@ -26,7 +26,7 @@ export default function EuroSweeper() {
   const [currentCountryKey, setCurrentCountryKey] = useState<string>('portugal');
   const [board, setBoard] = useState<Board>([]);
   const [gameStatus, setGameStatus] = useState<GameStatus>('playing');
-  const [isFlagging, setIsFlagging] = useState(false);
+  const [isFlagging, setIsFlagging] = useState(true);
   const [isChording, setIsChording] = useState(true);
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
@@ -45,7 +45,6 @@ export default function EuroSweeper() {
     let newBoard = createBoard(country.shape, country.mines);
     setGameStatus('playing');
     setFlagCount(0);
-    setIsFlagging(false);
 
     // Auto-reveal first safe square
     const safeTiles: { row: number, col: number }[] = [];
