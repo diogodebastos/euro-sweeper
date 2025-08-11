@@ -104,6 +104,7 @@ export default function EuroSweeper() {
       if (Object.keys(countries).length === newBeatenCountries.length) {
         setGameStatus('won');
         setIsClassicModeUnlocked(true);
+        setIsClassicMode(true);
         return;
       }
 
@@ -311,7 +312,7 @@ export default function EuroSweeper() {
         return {
           title: "Congratulations! You've swept the entire Europe!",
           description: "You are a true EuroSweeper champion! You've unlocked Classic Mode.",
-          actions: <AlertDialogAction onClick={() => { setBeatenCountries([]); startGame('portugal'); }}>Play Again</AlertDialogAction>
+          actions: <AlertDialogAction onClick={() => { setBeatenCountries([]); setIsClassicMode(false); startGame('portugal'); }}>Play Again</AlertDialogAction>
         };
       }
       return {
@@ -405,5 +406,3 @@ export default function EuroSweeper() {
     </div>
   );
 }
-
-    
