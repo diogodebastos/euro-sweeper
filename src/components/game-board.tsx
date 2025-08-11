@@ -5,10 +5,12 @@ import type { Board } from '@/lib/game';
 import Tile from '@/components/tile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { countries } from '@/lib/countries';
+import { cn } from '@/lib/utils';
 
 interface GameBoardProps {
   board: Board;
   onTileClick: (row: number, col: number) => void;
+  isClassicMode: boolean;
 }
 
 const PortugalSkeleton = () => {
@@ -41,7 +43,7 @@ const PortugalSkeleton = () => {
 };
 
 
-export default function GameBoard({ board, onTileClick }: GameBoardProps) {
+export default function GameBoard({ board, onTileClick, isClassicMode }: GameBoardProps) {
   if (!board.length) {
     return <PortugalSkeleton />;
   }
@@ -49,12 +51,15 @@ export default function GameBoard({ board, onTileClick }: GameBoardProps) {
   const gridTemplateColumns = `repeat(${board[0].length}, minmax(0, 1fr))`;
 
   return (
-    <div className="p-2 md:p-4 bg-card rounded-lg shadow-lg border w-full overflow-auto">
+    <div className={cn(
+        "p-2 md:p-4 bg-card rounded-lg shadow-lg border w-full overflow-auto",
+        isClassicMode && "game-board-classic"
+        )}>
       <div 
-        className="grid gap-1 mx-auto"
+        className="grid gap-px mx-auto"
         style={{ 
           gridTemplateColumns,
-          maxWidth: `${board[0].length * 2.5}rem`,
+          width: 'max-content',
         }}
       >
         {board.map((row, rowIndex) =>
@@ -63,6 +68,7 @@ export default function GameBoard({ board, onTileClick }: GameBoardProps) {
               key={`${rowIndex}-${colIndex}`}
               {...tile}
               onClick={() => onTileClick(rowIndex, colIndex)}
+              isClassicMode={isClassicMode}
             />
           ))
         )}

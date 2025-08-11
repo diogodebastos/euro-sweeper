@@ -17,8 +17,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Flag, Bomb, RefreshCw, Zap } from 'lucide-react';
+import { Flag, Bomb, RefreshCw, Zap, Smile, Frown, Award, VenetianMask } from 'lucide-react';
 import { ThemeToggle, type ThemeToggleHandle } from '@/components/theme-toggle';
+import { cn } from '@/lib/utils';
 
 type GameStatus = 'playing' | 'won' | 'lost';
 
@@ -31,6 +32,8 @@ export default function EuroSweeper() {
   const [revealedCount, setRevealedCount] = useState(0);
   const [flagCount, setFlagCount] = useState(0);
   const [beatenCountries, setBeatenCountries] = useState<string[]>([]);
+  const [isClassicMode, setIsClassicMode] = useState(false);
+  const [isClassicModeUnlocked, setIsClassicModeUnlocked] = useState(false);
   const themeToggleRef = useRef<ThemeToggleHandle>(null);
 
   const currentCountry = useMemo(() => countries[currentCountryKey], [currentCountryKey]);
@@ -38,6 +41,14 @@ export default function EuroSweeper() {
   const totalNonMineTiles = useMemo(() => {
     return currentCountry.shape.flat().filter(cell => cell === 1).length - currentCountry.mines;
   }, [currentCountry]);
+
+  useEffect(() => {
+    if (isClassicMode) {
+      document.body.classList.add('classic');
+    } else {
+      document.body.classList.remove('classic');
+    }
+  }, [isClassicMode]);
 
   const startGame = useCallback((countryKey: string) => {
     const country = countries[countryKey];
@@ -89,9 +100,15 @@ export default function EuroSweeper() {
       const newBeatenCountries = beatenCountries.includes(currentCountryKey) ? beatenCountries : [...beatenCountries, currentCountryKey];
       setBeatenCountries(newBeatenCountries);
 
+      if (Object.keys(countries).length === newBeatenCountries.length) {
+        setGameStatus('won');
+        setIsClassicModeUnlocked(true);
+        return;
+      }
+
       const adjacentUnbeaten = currentCountry.adjacent.filter(key => !newBeatenCountries.includes(key));
 
-      if (Object.keys(countries).length !== newBeatenCountries.length && adjacentUnbeaten.length === 1) {
+      if (adjacentUnbeaten.length === 1) {
         handleNextCountry(adjacentUnbeaten[0]);
       } else {
         setGameStatus('won');
@@ -292,7 +309,7 @@ export default function EuroSweeper() {
       if (allCountriesBeaten) {
         return {
           title: "Congratulations! You've swept the entire Europe!",
-          description: "You are a true EuroSweeper champion!",
+          description: "You are a true EuroSweeper champion! You've unlocked Classic Mode.",
           actions: <AlertDialogAction onClick={() => { setBeatenCountries([]); startGame('portugal'); }}>Play Again</AlertDialogAction>
         };
       }
@@ -307,10 +324,28 @@ export default function EuroSweeper() {
   }
 
   const { title, description, actions } = getDialogContent();
+  
+  const renderSmiley = () => {
+    const allCountriesBeaten = Object.keys(countries).length === beatenCountries.length;
+    if (gameStatus === 'lost') {
+      return <Frown className="w-6 h-6" />;
+    }
+    if (gameStatus === 'won' && allCountriesBeaten) {
+      return <Award className="w-6 h-6" />;
+    }
+    if (isClassicMode) {
+      return <VenetianMask className="w-6 h-6" />;
+    }
+    return <Smile className="w-6 h-6" />;
+  };
+
 
   return (
     <div className="flex flex-col items-center">
-      <div className="w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4">
+      <div className={cn(
+        "w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4",
+        isClassicMode && "controls-classic"
+        )}>
         <div className="flex-shrink-0">
           <h2 className="text-2xl font-bold font-headline text-primary">{currentCountry.name}</h2>
           <div className="flex items-center gap-4 text-muted-foreground mt-1">
@@ -319,6 +354,9 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
+          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
+            {renderSmiley()}
+          </Button>
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
@@ -341,14 +379,16 @@ export default function EuroSweeper() {
               onCheckedChange={setIsChording}
             />
           </div>
-          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
-            <RefreshCw className="w-5 h-5" />
-          </Button>
+          {isClassicModeUnlocked && (
+            <Button variant="outline" size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
+              <VenetianMask className="w-5 h-5" />
+            </Button>
+          )}
           <ThemeToggle ref={themeToggleRef} />
         </div>
       </div>
       
-      <GameBoard board={board} onTileClick={handleTileClick} />
+      <GameBoard board={board} onTileClick={handleTileClick} isClassicMode={isClassicMode} />
       
       <AlertDialog open={gameStatus === 'won' || gameStatus === 'lost'}>
         <AlertDialogContent>
