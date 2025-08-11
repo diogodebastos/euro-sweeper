@@ -382,10 +382,10 @@ export default function EuroSweeper() {
               onCheckedChange={setIsChording}
             />
           </div>
-          <ThemeToggle ref={themeToggleRef} />
           <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
             <RefreshCw className="w-6 h-6" />
           </Button>
+          <ThemeToggle ref={themeToggleRef} />
         </div>
       </div>
       
@@ -405,4 +405,5 @@ export default function EuroSweeper() {
     </div>
   );
 }
+
 
