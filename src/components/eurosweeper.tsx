@@ -349,7 +349,7 @@ export default function EuroSweeper() {
         isClassicMode && "controls-classic"
         )}>
         <div className="flex-shrink-0">
-          <h2 className="text-2xl font-bold font-headline text-primary">{currentCountry.name}</h2>
+          <h1 className="text-3xl font-bold font-headline text-primary">EuroSweeper: <span className="text-foreground">{currentCountry.name}</span></h1>
           <div className="flex items-center gap-4 text-muted-foreground mt-1">
             <div className="flex items-center gap-1"><Bomb className="w-4 h-4" /><span>{currentCountry.mines}</span></div>
             <div className="flex items-center gap-1"><Flag className="w-4 h-4" /><span>{flagCount}</span></div>
