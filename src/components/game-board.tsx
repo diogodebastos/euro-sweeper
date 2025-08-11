@@ -52,11 +52,11 @@ export default function GameBoard({ board, onTileClick, isClassicMode }: GameBoa
 
   return (
     <div className={cn(
-        "p-2 md:p-4 bg-card rounded-lg shadow-lg border w-full overflow-auto",
+        "p-2 md:p-4 bg-card rounded-lg shadow-lg border w-full overflow-auto flex-grow",
         isClassicMode && "game-board-classic"
         )}>
       <div 
-        className="grid gap-px mx-auto"
+        className="grid gap-px m-auto"
         style={{ 
           gridTemplateColumns,
           width: 'max-content',

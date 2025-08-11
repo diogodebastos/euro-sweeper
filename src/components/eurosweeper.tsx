@@ -343,9 +343,9 @@ export default function EuroSweeper() {
 
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center flex-grow min-h-0">
       <div className={cn(
-        "w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4",
+        "w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4 flex-shrink-0",
         isClassicMode && "controls-classic"
         )}>
         <div className="flex-shrink-0">
