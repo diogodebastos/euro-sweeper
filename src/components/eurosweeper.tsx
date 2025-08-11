@@ -333,10 +333,10 @@ export default function EuroSweeper() {
     if (gameStatus === 'won' && allCountriesBeaten) {
       return <Award className="w-6 h-6" />;
     }
-    if (isClassicMode) {
-      return <VenetianMask className="w-6 h-6" />;
+    if (gameStatus !== 'playing') {
+      return <Smile className="w-6 h-6" />;
     }
-    return <Smile className="w-6 h-6" />;
+    return <VenetianMask className="w-6 h-6" />;
   };
 
 
@@ -354,9 +354,14 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
-            {renderSmiley()}
+           <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
+            <RefreshCw className="w-6 h-6" />
           </Button>
+          {isClassicModeUnlocked && (
+            <Button variant="outline" size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
+              {renderSmiley()}
+            </Button>
+          )}
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
@@ -379,11 +384,6 @@ export default function EuroSweeper() {
               onCheckedChange={setIsChording}
             />
           </div>
-          {isClassicModeUnlocked && (
-            <Button variant="outline" size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
-              <VenetianMask className="w-5 h-5" />
-            </Button>
-          )}
           <ThemeToggle ref={themeToggleRef} />
         </div>
       </div>
@@ -404,5 +404,3 @@ export default function EuroSweeper() {
     </div>
   );
 }
-
-    
