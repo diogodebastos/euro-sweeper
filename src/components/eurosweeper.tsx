@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -354,9 +355,6 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
-           <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
-            <RefreshCw className="w-6 h-6" />
-          </Button>
           {isClassicModeUnlocked && (
             <Button variant="outline" size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
               {renderSmiley()}
@@ -385,6 +383,9 @@ export default function EuroSweeper() {
             />
           </div>
           <ThemeToggle ref={themeToggleRef} />
+          <Button variant="outline" size="icon" onClick={() => startGame(currentCountryKey)} aria-label="Restart Game (R)">
+            <RefreshCw className="w-6 h-6" />
+          </Button>
         </div>
       </div>
       
@@ -404,3 +405,4 @@ export default function EuroSweeper() {
     </div>
   );
 }
+
