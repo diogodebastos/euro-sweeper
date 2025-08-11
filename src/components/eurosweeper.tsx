@@ -357,7 +357,7 @@ export default function EuroSweeper() {
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
           {isClassicModeUnlocked && (
-            <Button variant={isClassicMode ? "secondary" : "outline"} size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
+            <Button variant={isClassicMode ? 'default' : 'outline'} size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
               <Smile className="w-6 h-6" />
             </Button>
           )}
