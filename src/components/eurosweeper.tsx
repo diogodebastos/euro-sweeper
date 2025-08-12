@@ -356,11 +356,6 @@ export default function EuroSweeper() {
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-4">
-          {isClassicModeUnlocked && (
-            <Button variant={isClassicMode ? 'default' : 'outline'} size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
-              <Smile className="w-6 h-6" />
-            </Button>
-          )}
           <div className="flex items-center space-x-2">
             <Label htmlFor="flag-mode" className="flex items-center gap-2 cursor-pointer">
               <Flag className="w-5 h-5"/>
@@ -387,6 +382,11 @@ export default function EuroSweeper() {
             <RefreshCw className="w-6 h-6" />
           </Button>
           <ThemeToggle ref={themeToggleRef} />
+          {isClassicModeUnlocked && (
+            <Button variant={isClassicMode ? 'default' : 'outline'} size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode">
+              <Smile className="w-6 h-6" />
+            </Button>
+          )}
         </div>
       </div>
       
