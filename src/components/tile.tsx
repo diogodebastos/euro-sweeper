@@ -1,14 +1,20 @@
 
 "use client";
 
+import { memo } from 'react';
 import { Bomb, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Tile as TileType } from '@/lib/game';
 
 interface TileProps extends TileType {
-  onClick: () => void;
+  row: number;
+  col: number;
+  // Stable across renders, so memo only redraws tiles that changed.
+  onClick: (row: number, col: number) => void;
   isClassicMode: boolean;
   flagColor?: string;
+  compact?: boolean;
+  title?: string;
 }
 
 const numberColors = [
@@ -33,27 +39,30 @@ const classicNumberColors = [
   'text-gray-600',      // 8
 ];
 
-export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, onClick, isClassicMode, flagColor }: TileProps) {
+function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, row, col, onClick, isClassicMode, flagColor, compact, title }: TileProps) {
   if (!isVisible) {
-    return <div className="aspect-square invisible" />;
+    return <div className={cn("aspect-square invisible", compact && "w-6 h-6")} />;
   }
 
   const showFlag = !!flagColor && isRevealed && !isMine && !isFlagged;
 
+  const iconSize = compact ? "w-3.5 h-3.5" : "w-4 h-4 sm:w-5 sm:h-5";
+  const textSize = compact ? "text-sm" : "text-lg";
+
   const renderContent = () => {
     if (isFlagged) {
-      return <Flag className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />;
+      return <Flag className={cn(iconSize, "text-destructive")} />;
     }
     if (isRevealed) {
       if (isMine) {
-        return <Bomb className={cn("w-4 h-4 sm:w-5 sm:h-5", isClassicMode ? "text-black" : "text-white")} />;
+        return <Bomb className={cn(iconSize, isClassicMode ? "text-black" : "text-white")} />;
       }
       if (adjacentMines > 0) {
         if (showFlag) {
-          return <span className="font-bold text-lg flag-number">{adjacentMines}</span>;
+          return <span className={cn('font-bold flag-number', textSize)}>{adjacentMines}</span>;
         }
         const colors = isClassicMode ? classicNumberColors : numberColors;
-        return <span className={cn('font-bold text-lg', colors[adjacentMines - 1])}>{adjacentMines}</span>;
+        return <span className={cn('font-bold', textSize, colors[adjacentMines - 1])}>{adjacentMines}</span>;
       }
     }
     return null;
@@ -76,16 +85,20 @@ export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacen
 
   return (
     <button
-      onClick={onClick}
+      onClick={() => onClick(row, col)}
       disabled={isRevealed && isFlagged}
       className={cn(
-        'w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',
+        compact ? 'w-6 h-6' : 'w-8 h-8 sm:w-10 sm:h-10',
+        'flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',
         isClassicMode ? classicClasses : modernClasses
       )}
       style={showFlag ? { backgroundColor: flagColor, borderColor: 'rgba(0, 0, 0, 0.25)' } : undefined}
-      aria-label={`Tile at row, col. Status: ${isRevealed ? 'Revealed' : 'Hidden'}`}
+      title={title}
+      aria-label={`Tile at row ${row + 1}, column ${col + 1}. Status: ${isRevealed ? 'Revealed' : 'Hidden'}`}
     >
       {renderContent()}
     </button>
   );
 }
+
+export default memo(Tile);

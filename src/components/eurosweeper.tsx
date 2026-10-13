@@ -3,11 +3,12 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { Board, Tile as TileType } from '@/lib/game';
-import { createBoard, floodFill } from '@/lib/game';
+import { createBoard, floodFill, openingMove } from '@/lib/game';
 import Link from 'next/link';
 import { countries } from '@/lib/countries';
 import { CLASSIC_AT, FLAGS_AT, NEW_PROGRESS, loadProgress, mineCount, saveProgress, unlocks } from '@/lib/progress';
 import { useToast } from '@/hooks/use-toast';
+import { flagColor } from '@/lib/flags';
 import GameBoard from '@/components/game-board';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -22,7 +23,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Flag, Bomb, RefreshCw, Zap, Smile, Frown, Award, VenetianMask, PaintBucket, Skull, Plane } from 'lucide-react';
+import { Flag, Bomb, RefreshCw, Zap, Smile, Frown, Award, VenetianMask, PaintBucket, Skull, Plane, Crown } from 'lucide-react';
 import { ThemeToggle, type ThemeToggleHandle } from '@/components/theme-toggle';
 import { cn } from '@/lib/utils';
 
@@ -47,7 +48,8 @@ export default function EuroSweeper() {
 
   const currentCountry = useMemo(() => countries[currentCountryKey], [currentCountryKey]);
   const currentMines = mineCount(currentCountryKey, isHardMode);
-  const unlocked = unlocks(clearedCountries);
+  const [isBossBeaten, setIsBossBeaten] = useState(false);
+  const unlocked = unlocks(clearedCountries, isBossBeaten);
 
   const totalNonMineTiles = useMemo(() => {
     return currentCountry.shape.flat().filter(cell => cell === 1).length - currentMines;
@@ -62,8 +64,9 @@ export default function EuroSweeper() {
       classic: isClassicMode,
       flags: isFlagTiles,
       hard: isHardMode,
+      bossBeaten: isBossBeaten,
     });
-  }, [isLoaded, beatenCountries, clearedCountries, currentCountryKey, isClassicMode, isFlagTiles, isHardMode]);
+  }, [isLoaded, beatenCountries, clearedCountries, currentCountryKey, isClassicMode, isFlagTiles, isHardMode, isBossBeaten]);
 
   useEffect(() => {
     if (isClassicMode) {
@@ -71,59 +74,33 @@ export default function EuroSweeper() {
     } else {
       document.body.classList.remove('classic');
     }
+    return () => document.body.classList.remove('classic');
   }, [isClassicMode]);
 
   const startGame = useCallback((countryKey: string, hard: boolean) => {
     const country = countries[countryKey];
     setCurrentCountryKey(countryKey);
-    let newBoard = createBoard(country.shape, mineCount(countryKey, hard));
+    const newBoard = createBoard(country.shape, mineCount(countryKey, hard));
     setGameStatus('playing');
     setFlagCount(0);
 
-    // Auto-reveal first safe square
-    const safeTiles: { row: number, col: number }[] = [];
-    const zeroMineTiles: { row: number, col: number }[] = [];
-
-    newBoard.forEach((row, r) => {
-      row.forEach((tile, c) => {
-        if (tile.isVisible && !tile.isMine) {
-          safeTiles.push({ row: r, col: c });
-          if (tile.adjacentMines === 0) {
-            zeroMineTiles.push({ row: r, col: c });
-          }
-        }
-      });
-    });
-
-    let firstMove;
-    if (zeroMineTiles.length > 0) {
-      firstMove = zeroMineTiles[Math.floor(Math.random() * zeroMineTiles.length)];
-    } else if (safeTiles.length > 0) {
-      firstMove = safeTiles[Math.floor(Math.random() * safeTiles.length)];
-    }
-
-    if (firstMove) {
-      const { row, col } = firstMove;
-      const { board: revealedBoard, revealedCount: initialRevealed } = floodFill(newBoard, row, col);
-      setBoard(revealedBoard);
-      setRevealedCount(initialRevealed);
-      checkWinCondition(initialRevealed);
-    } else {
-      setBoard(newBoard);
-      setRevealedCount(0);
-    }
+    const { board: revealedBoard, revealedCount: initialRevealed } = openingMove(newBoard);
+    setBoard(revealedBoard);
+    setRevealedCount(initialRevealed);
+    if (initialRevealed > 0) checkWinCondition(initialRevealed);
   }, []);
 
   useEffect(() => {
     const saved = loadProgress();
-    const open = unlocks(saved.cleared);
+    const open = unlocks(saved.cleared, saved.bossBeaten);
     setBeatenCountries(saved.beaten);
     setClearedCountries(saved.cleared);
     setIsClassicMode(open.classic && saved.classic);
     setIsFlagTiles(open.flags && saved.flags);
-    setIsHardMode(open.europe && saved.hard);
+    setIsHardMode(open.champion && saved.hard);
+    setIsBossBeaten(saved.bossBeaten);
     setIsLoaded(true);
-    startGame(saved.current, open.europe && saved.hard);
+    startGame(saved.current, open.champion && saved.hard);
   }, [startGame]);
 
   const restart = (countryKey = currentCountryKey) => startGame(countryKey, isHardMode);
@@ -355,11 +332,13 @@ export default function EuroSweeper() {
       if (allCountriesBeaten) {
         return {
           title: "Congratulations! You've swept the entire Europe!",
-          description: "You are a true EuroSweeper champion! Your map of Europe is now gold, and Hard mode and travel anywhere are unlocked for your next tour.",
+          description: isBossBeaten
+            ? "Another tour of Europe complete. You are a true EuroSweeper champion!"
+            : "Every country is swept. One challenge is left: all of Europe on a single board. Three lives, about 590 mines.",
           actions: (
             <>
               <AlertDialogAction asChild>
-                <Link href="/map">See your gold map</Link>
+                {isBossBeaten ? <Link href="/map">See your gold map</Link> : <Link href="/europe">Face the final boss</Link>}
               </AlertDialogAction>
               <AlertDialogAction onClick={() => { setBeatenCountries([]); restart('portugal'); }}>Play Again</AlertDialogAction>
             </>
@@ -433,6 +412,13 @@ export default function EuroSweeper() {
             <RefreshCw className="w-6 h-6" />
           </Button>
           <ThemeToggle ref={themeToggleRef} />
+          {unlocked.boss && (
+            <Button variant="outline" size="icon" asChild title="Final boss: all of Europe">
+              <Link href="/europe" aria-label="Final boss: all of Europe">
+                <Crown className="w-6 h-6" />
+              </Link>
+            </Button>
+          )}
           {unlocked.classic && (
             <Button variant={isClassicMode ? 'default' : 'outline'} size="icon" onClick={() => setIsClassicMode(prev => !prev)} aria-label="Toggle Classic Mode" title="Classic theme">
               <Smile className="w-6 h-6" />
@@ -443,7 +429,7 @@ export default function EuroSweeper() {
               <PaintBucket className="w-6 h-6" />
             </Button>
           )}
-          {unlocked.europe && (
+          {unlocked.champion && (
             <Button
               variant={isHardMode ? 'destructive' : 'outline'}
               size="icon"
@@ -454,7 +440,7 @@ export default function EuroSweeper() {
               <Skull className="w-6 h-6" />
             </Button>
           )}
-          {unlocked.europe && (
+          {unlocked.champion && (
             <Select value={currentCountryKey} onValueChange={key => restart(key)}>
               <SelectTrigger className="w-44" aria-label="Travel anywhere">
                 <Plane className="w-4 h-4 mr-2 shrink-0" />
@@ -472,7 +458,7 @@ export default function EuroSweeper() {
         </div>
       </div>
       
-      <GameBoard board={board} onTileClick={handleTileClick} isClassicMode={isClassicMode} flagCountry={isFlagTiles ? currentCountryKey : undefined} />
+      <GameBoard board={board} onTileClick={handleTileClick} isClassicMode={isClassicMode} cellColor={isFlagTiles ? (r, c) => flagColor(currentCountryKey, r, c, board.length, board[0].length) : undefined} />
       
       <AlertDialog open={gameStatus === 'won' || gameStatus === 'lost'}>
         <AlertDialogContent>

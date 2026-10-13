@@ -9,38 +9,35 @@ export interface Tile {
 export type Board = Tile[][];
 
 export function createBoard(shape: number[][], numMines: number): Board {
+  const cols = shape[0].length;
+  const validTiles: number[] = [];
+  shape.forEach((row, r) => row.forEach((cell, c) => {
+    if (cell === 1) validTiles.push(r * cols + c);
+  }));
+
+  // Pick mines with a partial Fisher-Yates shuffle
+  const mines = new Set<number>();
+  for (let i = 0; i < numMines && i < validTiles.length; i++) {
+    const j = i + Math.floor(Math.random() * (validTiles.length - i));
+    [validTiles[i], validTiles[j]] = [validTiles[j], validTiles[i]];
+    mines.add(validTiles[i]);
+  }
+  return boardWithMines(shape, mines);
+}
+
+// Builds a board with mines at the given cells (row * cols + col).
+export function boardWithMines(shape: number[][], mines: Set<number>): Board {
   const rows = shape.length;
   const cols = shape[0].length;
-  let board: Board = Array.from({ length: rows }, (_, r) =>
+  const board: Board = Array.from({ length: rows }, (_, r) =>
     Array.from({ length: cols }, (_, c) => ({
       isVisible: shape[r][c] === 1,
-      isMine: false,
+      isMine: shape[r][c] === 1 && mines.has(r * cols + c),
       isRevealed: false,
       isFlagged: false,
       adjacentMines: 0,
     }))
   );
-
-  const validTiles: { row: number, col: number }[] = [];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if (board[r][c].isVisible) {
-        validTiles.push({ row: r, col: c });
-      }
-    }
-  }
-
-  // Place mines
-  let minesPlaced = 0;
-  while (minesPlaced < numMines && validTiles.length > 0) {
-    const randIndex = Math.floor(Math.random() * validTiles.length);
-    const { row, col } = validTiles[randIndex];
-    if (!board[row][col].isMine) {
-      board[row][col].isMine = true;
-      minesPlaced++;
-    }
-    validTiles.splice(randIndex, 1);
-  }
 
   // Calculate adjacent mines
   for (let r = 0; r < rows; r++) {
@@ -112,4 +109,27 @@ export function floodFill(board: Board, row: number, col: number): { board: Boar
   });
 
   return { board: newBoard, revealedCount: totalRevealed };
+}
+
+// Reveals a random safe area to start the game, preferring a tile with no
+// neighbouring mines so the first move opens up the board.
+export function openingMove(board: Board): { board: Board; revealedCount: number } {
+  const safeTiles: { row: number; col: number }[] = [];
+  const zeroMineTiles: { row: number; col: number }[] = [];
+
+  board.forEach((row, r) => {
+    row.forEach((tile, c) => {
+      if (tile.isVisible && !tile.isMine) {
+        safeTiles.push({ row: r, col: c });
+        if (tile.adjacentMines === 0) {
+          zeroMineTiles.push({ row: r, col: c });
+        }
+      }
+    });
+  });
+
+  const options = zeroMineTiles.length > 0 ? zeroMineTiles : safeTiles;
+  if (options.length === 0) return { board, revealedCount: 0 };
+  const { row, col } = options[Math.floor(Math.random() * options.length)];
+  return floodFill(board, row, col);
 }

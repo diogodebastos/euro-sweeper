@@ -2,17 +2,19 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { countries } from '@/lib/countries';
-import { flagColor } from '@/lib/flags';
+import { BY_SIZE, EUROPE_COLS, EUROPE_ROWS, europeGrid } from '@/lib/europe';
 import { CLASSIC_AT, EUROPE_AT, FLAGS_AT, loadProgress } from '@/lib/progress';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const GOLDS = ['#D4AF37', '#E8C547', '#C49A2C'];
 
 const MILESTONES = [
-  { at: CLASSIC_AT, label: 'Classic theme' },
-  { at: FLAGS_AT, label: 'Flag tiles' },
-  { at: EUROPE_AT, label: 'Gold map, Hard mode and travel anywhere' },
+  { goal: `${CLASSIC_AT} countries`, label: 'Classic theme', done: (count: number) => count >= CLASSIC_AT },
+  { goal: `${FLAGS_AT} countries`, label: 'Flag tiles', done: (count: number) => count >= FLAGS_AT },
+  { goal: `${EUROPE_AT} countries`, label: 'The final boss', done: (count: number) => count >= EUROPE_AT },
+  { goal: 'Final boss', label: 'Gold map, Hard mode and travel anywhere', done: (_: number, boss: boolean) => boss },
 ];
 
 interface Cell {
@@ -24,44 +26,41 @@ interface Cell {
 
 export default function EuropeMap() {
   const [cleared, setCleared] = useState<string[] | null>(null);
+  const [bossBeaten, setBossBeaten] = useState(false);
   const [showGold, setShowGold] = useState(true);
   const [hovered, setHovered] = useState<string | null>(null);
 
   useEffect(() => {
-    setCleared(loadProgress().cleared);
+    const progress = loadProgress();
+    setCleared(progress.cleared);
+    setBossBeaten(progress.bossBeaten);
   }, []);
 
-  const isGold = cleared !== null && cleared.length >= EUROPE_AT && showGold;
+  const isGold = bossBeaten && showGold;
 
   const { cells, width, height } = useMemo(() => {
-    const entries = Object.entries(countries);
-    const top = Math.min(...entries.map(([, c]) => c.position[0]));
-    const left = Math.min(...entries.map(([, c]) => c.position[1]));
     const done = new Set(cleared ?? []);
-    // Neighbouring boards share their border cells: draw cleared countries over
-    // uncleared ones, and small countries over big ones so they don't vanish.
-    const size = (shape: number[][]) => shape.flat().filter(Boolean).length;
-    const order = [...entries].sort(([a, ca], [b, cb]) =>
-      Number(done.has(a)) - Number(done.has(b)) || size(cb.shape) - size(ca.shape));
+    // Cleared countries win shared border cells, then smaller countries.
+    const grid = europeGrid([...BY_SIZE].sort((a, b) => Number(done.has(b)) - Number(done.has(a))));
+    const goldOf = Object.fromEntries(Object.keys(countries).map((key, i) => [key, GOLDS[i % GOLDS.length]]));
     const cells: Cell[] = [];
-    let width = 0, height = 0;
-    order.forEach(([key, country]) => {
-      const rows = country.shape.length, cols = country.shape[0].length;
-      const gold = GOLDS[entries.findIndex(([k]) => k === key) % GOLDS.length];
-      country.shape.forEach((line, r) => line.forEach((cell, c) => {
-        if (!cell) return;
-        const row = country.position[0] - top + r, col = country.position[1] - left + c;
-        width = Math.max(width, col + 1);
-        height = Math.max(height, row + 1);
-        const color = isGold ? gold : done.has(key) ? flagColor(key, r, c, rows, cols) ?? '#3498db' : 'hsl(var(--muted))';
-        cells.push({ key, row, col, color });
-      }));
-    });
-    return { cells, width, height };
+    grid.forEach((line, row) => line.forEach((cell, col) => {
+      if (!cell) return;
+      const color = isGold ? goldOf[cell.key] : done.has(cell.key) ? cell.flag : 'hsl(var(--muted))';
+      cells.push({ key: cell.key, row, col, color });
+    }));
+    return { cells, width: EUROPE_COLS, height: EUROPE_ROWS };
   }, [cleared, isGold]);
 
   const count = cleared?.length ?? 0;
-  const next = MILESTONES.find(m => count < m.at);
+  const remaining = EUROPE_AT - count;
+  const status = cleared === null
+    ? 'Loading your progress...'
+    : remaining > 0
+      ? `${remaining} more ${remaining === 1 ? 'country' : 'countries'} to sweep. ${MILESTONES.find(m => !m.done(count, bossBeaten))?.label} is next.`
+      : bossBeaten
+        ? 'Every country swept and the final boss beaten. Europe is yours.'
+        : 'Every country swept. The final boss awaits.';
 
   return (
     <div className="flex flex-col gap-4">
@@ -70,17 +69,15 @@ export default function EuropeMap() {
           <h1 className="text-3xl font-bold font-headline text-primary">
             Your Europe: <span className="text-foreground">{count} / {EUROPE_AT}</span>
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {cleared === null
-              ? 'Loading your progress...'
-              : next
-                ? `${next.at - count} more ${next.at - count === 1 ? 'country' : 'countries'} to unlock: ${next.label}.`
-                : 'Every country swept. Europe is yours.'}
-          </p>
+          <p className="text-muted-foreground mt-1">{status}</p>
         </div>
-        {count >= EUROPE_AT && (
+        {bossBeaten ? (
           <Button variant="outline" onClick={() => setShowGold(prev => !prev)}>
             {showGold ? 'Show flags' : 'Show gold'}
+          </Button>
+        ) : count >= EUROPE_AT && (
+          <Button asChild>
+            <Link href="/europe">Face the final boss</Link>
           </Button>
         )}
       </div>
@@ -112,20 +109,23 @@ export default function EuropeMap() {
         <p className="text-center text-sm text-muted-foreground h-5">{hovered ? countries[hovered].name : ''}</p>
       </div>
 
-      <ul className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {MILESTONES.map(m => (
-          <li
-            key={m.at}
-            className={cn(
-              'p-3 rounded-lg border bg-card text-sm',
-              count >= m.at ? 'border-primary text-foreground' : 'text-muted-foreground'
-            )}
-          >
-            <span className="font-bold">{m.at} countries</span>
-            <br />
-            {count >= m.at ? 'Unlocked: ' : 'Locked: '}{m.label}
-          </li>
-        ))}
+      <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+        {MILESTONES.map(m => {
+          const done = m.done(count, bossBeaten);
+          return (
+            <li
+              key={m.goal}
+              className={cn(
+                'p-3 rounded-lg border bg-card text-sm',
+                done ? 'border-primary text-foreground' : 'text-muted-foreground'
+              )}
+            >
+              <span className="font-bold">{m.goal}</span>
+              <br />
+              {done ? 'Unlocked: ' : 'Locked: '}{m.label}
+            </li>
+          );
+        })}
       </ul>
     </div>
   );
