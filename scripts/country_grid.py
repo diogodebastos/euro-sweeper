@@ -1,10 +1,10 @@
 """Turn country borders into EuroSweeper grids for src/lib/countries.ts.
 
 Rebuilt from the original mines_map_generator.py. Takes the largest polygon of each
-country (the mainland), projects it to Web Mercator, rasterises it on a 50 km grid
+country (the mainland, or more via PARTS), projects it to Web Mercator, rasterises it on a 50 km grid
 (a cell is land if it touches the country) and trims empty rows/columns.
-The grid origin comes from the bounds of every country in the game, so new
-countries line up with the existing ones.
+The grid origin comes from the original eight countries, so new countries line
+up with the existing ones.
 
 Borders: Natural Earth 1:50m admin-0 countries GeoJSON
   https://raw.githubusercontent.com/nvkelso/natural-earth-vector/v5.1.2/geojson/ne_50m_admin_0_countries.geojson
@@ -19,19 +19,27 @@ import sys
 import numpy as np
 from pyproj import Transformer
 from shapely.geometry import Polygon, box, shape
-from shapely.ops import transform
+from shapely.ops import transform, unary_union
 
-GAME_COUNTRIES = ["Portugal", "Spain", "France", "Belgium", "Luxembourg",
-                  "Germany", "Switzerland", "Italy", "Poland"]
+# The first eight anchor the grid, so adding countries never shifts existing boards.
+ANCHOR_COUNTRIES = ["Portugal", "Spain", "France", "Belgium", "Luxembourg",
+                    "Germany", "Switzerland", "Italy"]
+GAME_COUNTRIES = ANCHOR_COUNTRIES + ["Poland", "Netherlands", "Denmark", "Austria",
+                                     "Czechia", "United Kingdom", "Ireland"]
+# How many of a country's largest polygons to keep (default 1, the mainland).
+PARTS = {
+    "United Kingdom": 2,  # Great Britain + Northern Ireland
+    "Denmark": 4,  # Jutland, Zealand, Funen, Lolland (no Bornholm)
+}
 CELL_SIZE = 50000  # 50 km cells
 
 to_mercator = Transformer.from_crs("EPSG:4326", "EPSG:3857", always_xy=True).transform
 
 
-def mainland(geom):
+def mainland(geom, parts=1):
     if isinstance(geom, Polygon):
         return geom
-    return max(geom.geoms, key=lambda p: p.area)
+    return unary_union(sorted(geom.geoms, key=lambda p: p.area, reverse=True)[:parts])
 
 
 def load(path):
@@ -41,7 +49,7 @@ def load(path):
     for feat in features:
         name = feat["properties"]["NAME"]
         if name in GAME_COUNTRIES:
-            geoms[name] = transform(to_mercator, mainland(shape(feat["geometry"])))
+            geoms[name] = transform(to_mercator, mainland(shape(feat["geometry"]), PARTS.get(name, 1)))
     return geoms
 
 
@@ -56,9 +64,16 @@ def rasterise(geom, xs, ys):
 
 def main(path, names):
     geoms = load(path)
+    anchor = [geoms[n].bounds for n in ANCHOR_COUNTRIES]
+    ox, oy = min(b[0] for b in anchor), min(b[1] for b in anchor)
     bounds = [g.bounds for g in geoms.values()]
-    xs = np.arange(min(b[0] for b in bounds), max(b[2] for b in bounds), CELL_SIZE)
-    ys = np.arange(min(b[1] for b in bounds), max(b[3] for b in bounds), CELL_SIZE)[::-1]
+
+    def axis(origin, lo, hi):
+        first = np.floor((min(lo) - origin) / CELL_SIZE)
+        return origin + np.arange(first, np.ceil((max(hi) - origin) / CELL_SIZE)) * CELL_SIZE
+
+    xs = axis(ox, [b[0] for b in bounds], [b[2] for b in bounds])
+    ys = axis(oy, [b[1] for b in bounds], [b[3] for b in bounds])[::-1]
     for name in names:
         grid = rasterise(geoms[name], xs, ys)
         rows = ", \n            ".join(json.dumps(r) for r in grid)
