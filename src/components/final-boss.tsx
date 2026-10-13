@@ -21,7 +21,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Flag, Bomb, Zap, Heart, RefreshCw } from 'lucide-react';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeMenuItem, ThemeToggle } from '@/components/theme-toggle';
+import MobileBar from '@/components/mobile-bar';
 import { cn } from '@/lib/utils';
 
 type BossStatus = 'loading' | 'locked' | 'playing' | 'won' | 'lost';
@@ -206,21 +207,42 @@ export default function FinalBoss() {
   }
 
   const percent = Math.floor((safeRevealed / totalSafe) * 100);
+  const hearts = (
+    <span className="flex items-center gap-1" aria-label={`${lives} of ${BOSS_LIVES} lives left`}>
+      {Array.from({ length: BOSS_LIVES }, (_, i) => (
+        <Heart key={i} className={cn("w-4 h-4", i < lives ? "fill-destructive text-destructive" : "")} />
+      ))}
+    </span>
+  );
 
   return (
     <div className="flex flex-col items-center flex-grow min-h-0">
+      <MobileBar
+        title="Final boss: Europe"
+        stats={
+          <>
+            {hearts}
+            <span className="flex items-center gap-1"><Bomb className="w-4 h-4" />{totalMines - flags - exploded}</span>
+            <span>{percent}%</span>
+          </>
+        }
+        isFlagging={isFlagging}
+        onFlaggingChange={setIsFlagging}
+        isChording={isChording}
+        onChordingChange={setIsChording}
+        onRestart={confirmNewRun}
+        restartLabel="New board"
+        className={cn(isClassicMode && "controls-classic")}
+        menu={<ThemeMenuItem />}
+      />
       <div className={cn(
-        "w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4 flex-shrink-0",
+        "w-full hidden sm:flex flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4 flex-shrink-0",
         isClassicMode && "controls-classic"
       )}>
         <div className="flex-shrink-0">
           <h1 className="text-3xl font-bold font-headline text-primary">Final boss: <span className="text-foreground">Europe</span></h1>
           <div className="flex items-center gap-4 text-muted-foreground mt-1">
-            <div className="flex items-center gap-1" aria-label={`${lives} of ${BOSS_LIVES} lives left`}>
-              {Array.from({ length: BOSS_LIVES }, (_, i) => (
-                <Heart key={i} className={cn("w-4 h-4", i < lives ? "fill-destructive text-destructive" : "")} />
-              ))}
-            </div>
+            {hearts}
             <div className="flex items-center gap-1" title="Mines left"><Bomb className="w-4 h-4" /><span>{totalMines - flags - exploded}</span></div>
             <div className="flex items-center gap-1" title="Flags placed"><Flag className="w-4 h-4" /><span>{flags}</span></div>
             <span>{percent}% swept</span>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import type { Board, Tile as TileType } from '@/lib/game';
 import { createBoard, floodFill, openingMove } from '@/lib/game';
 import Link from 'next/link';
@@ -24,7 +24,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Flag, Bomb, RefreshCw, Zap, Smile, Frown, Award, VenetianMask, PaintBucket, Skull, Plane, Crown } from 'lucide-react';
-import { ThemeToggle, type ThemeToggleHandle } from '@/components/theme-toggle';
+import { ThemeMenuItem, ThemeToggle } from '@/components/theme-toggle';
+import MobileBar, { MENU_ICON, MENU_ICON_ITEM } from '@/components/mobile-bar';
+import { toggleTheme } from '@/lib/theme';
+import {
+  DropdownMenuCheckboxItem,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+} from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
 
 type GameStatus = 'playing' | 'won' | 'lost';
@@ -43,7 +53,6 @@ export default function EuroSweeper() {
   const [isFlagTiles, setIsFlagTiles] = useState(false);
   const [isHardMode, setIsHardMode] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const themeToggleRef = useRef<ThemeToggleHandle>(null);
   const { toast } = useToast();
 
   const currentCountry = useMemo(() => countries[currentCountryKey], [currentCountryKey]);
@@ -167,7 +176,7 @@ export default function EuroSweeper() {
         setIsChording(prev => !prev);
       }
       if (e.key.toLowerCase() === 'd') {
-        themeToggleRef.current?.toggle();
+        toggleTheme();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -374,8 +383,66 @@ export default function EuroSweeper() {
 
   return (
     <div className="flex flex-col items-center flex-grow min-h-0">
+      <MobileBar
+        title={currentCountry.name}
+        stats={
+          <>
+            <span className="flex items-center gap-1"><Bomb className="w-4 h-4" />{currentMines}</span>
+            <span className="flex items-center gap-1"><Flag className="w-4 h-4" />{flagCount}</span>
+          </>
+        }
+        isFlagging={isFlagging}
+        onFlaggingChange={setIsFlagging}
+        isChording={isChording}
+        onChordingChange={setIsChording}
+        onRestart={() => restart()}
+        className={cn(isClassicMode && "controls-classic")}
+        menu={
+          <>
+            <ThemeMenuItem />
+            {unlocked.classic && (
+              <DropdownMenuCheckboxItem checked={isClassicMode} onCheckedChange={setIsClassicMode}>
+                Classic theme
+              </DropdownMenuCheckboxItem>
+            )}
+            {unlocked.flags && (
+              <DropdownMenuCheckboxItem checked={isFlagTiles} onCheckedChange={setIsFlagTiles}>
+                Flag tiles
+              </DropdownMenuCheckboxItem>
+            )}
+            {unlocked.champion && (
+              <DropdownMenuCheckboxItem
+                checked={isHardMode}
+                onCheckedChange={hard => { setIsHardMode(hard); startGame(currentCountryKey, hard); }}
+              >
+                Hard mode
+              </DropdownMenuCheckboxItem>
+            )}
+            {(unlocked.champion || unlocked.boss) && <DropdownMenuSeparator />}
+            {unlocked.champion && (
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger className={MENU_ICON_ITEM}>
+                  <Plane className={MENU_ICON} /> Travel to…
+                </DropdownMenuSubTrigger>
+                <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+                  {Object.entries(countries).map(([key, country]) => (
+                    <DropdownMenuItem key={key} onSelect={() => restart(key)}>
+                      {country.name}{beatenCountries.includes(key) ? ' ✓' : ''}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+            )}
+            {unlocked.boss && (
+              <DropdownMenuItem asChild className={MENU_ICON_ITEM}>
+                <Link href="/europe"><Crown className={MENU_ICON} /> Final boss</Link>
+              </DropdownMenuItem>
+            )}
+          </>
+        }
+      />
       <div className={cn(
-        "w-full flex flex-col sm:flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4 flex-shrink-0",
+        "w-full hidden sm:flex flex-row justify-between items-center mb-4 p-4 bg-card rounded-lg shadow-md border gap-4 flex-shrink-0",
         isClassicMode && "controls-classic"
         )}>
         <div className="flex-shrink-0">
@@ -411,7 +478,7 @@ export default function EuroSweeper() {
           <Button variant="outline" size="icon" onClick={() => restart()} aria-label="Restart Game (R)">
             <RefreshCw className="w-6 h-6" />
           </Button>
-          <ThemeToggle ref={themeToggleRef} />
+          <ThemeToggle />
           {unlocked.boss && (
             <Button variant="outline" size="icon" asChild title="Final boss: all of Europe">
               <Link href="/europe" aria-label="Final boss: all of Europe">
