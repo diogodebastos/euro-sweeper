@@ -70,7 +70,7 @@ function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, row, co
   };
 
   const modernClasses = {
-    'bg-tile-hidden hover:bg-tile-hover cursor-pointer': !isRevealed,
+    'bg-tile-hidden hover:bg-tile-hover cursor-pointer shadow-[var(--tile-highlight)]': !isRevealed,
     'bg-tile-revealed border border-tile-border': isRevealed && !isMine && !isFlagged,
     'bg-destructive': isRevealed && isMine,
     'cursor-pointer': !isRevealed || (isRevealed && !isFlagged),

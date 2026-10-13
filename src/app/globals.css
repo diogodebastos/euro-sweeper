@@ -42,39 +42,42 @@ body {
     --map-cell-stroke: rgba(15, 23, 42, 0.22);
   }
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 224 45% 5%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 223 38% 9%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 223 38% 10%;
     --popover-foreground: 210 40% 98%;
     --primary: 207 70% 54%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 220 28% 17%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 220 28% 17%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 220 28% 19%;
     --accent-foreground: 210 40% 98%;
     --destructive: 6 78% 57%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
+    --border: 220 26% 16%;
+    --input: 220 22% 27%;
     --ring: 207 70% 54%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --tile-hidden: 217.2 32.6% 17.5%;
-    --tile-hidden-hover: 217.2 32.6% 24%;
-    --tile-revealed: 222.2 84% 4.9%;
-    --tile-revealed-border: 217.2 32.6% 17.5%;
-    --map-empty: 217.2 32.6% 17.5%;
+    --tile-hidden: 218 28% 22%;
+    --tile-hidden-hover: 218 30% 29%;
+    --tile-revealed: 223 32% 13%;
+    --tile-revealed-border: 222 26% 17%;
+    --map-empty: 218 26% 20%;
     --map-cell-stroke: transparent;
+    --tile-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+    --page-glow: radial-gradient(ellipse 80% 50% at 50% -10%, hsl(212 60% 20% / 0.55), transparent 70%);
   }
 
   .classic {
+    --page-glow: none;
     --background: 180 0% 75%;
     --foreground: 0 0% 0%;
     --card: 180 0% 75%;
@@ -118,6 +121,8 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    background-image: var(--page-glow, none);
+    background-attachment: fixed;
   }
 }
 
