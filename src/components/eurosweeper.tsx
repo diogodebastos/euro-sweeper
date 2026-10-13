@@ -59,6 +59,8 @@ export default function EuroSweeper() {
   const currentMines = mineCount(currentCountryKey, isHardMode);
   const [isBossBeaten, setIsBossBeaten] = useState(false);
   const unlocked = unlocks(clearedCountries, isBossBeaten);
+  // Countries still to sweep on this tour; the current one is where you already are.
+  const travelDestinations = Object.keys(countries).filter(key => key !== currentCountryKey && !beatenCountries.includes(key));
 
   const totalNonMineTiles = useMemo(() => {
     return currentCountry.shape.flat().filter(cell => cell === 1).length - currentMines;
@@ -419,15 +421,15 @@ export default function EuroSweeper() {
               </DropdownMenuCheckboxItem>
             )}
             {(unlocked.champion || unlocked.boss) && <DropdownMenuSeparator />}
-            {unlocked.champion && (
+            {unlocked.champion && travelDestinations.length > 0 && (
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className={MENU_ICON_ITEM}>
                   <Plane className={MENU_ICON} /> Travel to…
                 </DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
-                  {Object.entries(countries).map(([key, country]) => (
+                  {travelDestinations.map(key => (
                     <DropdownMenuItem key={key} onSelect={() => restart(key)}>
-                      {country.name}{beatenCountries.includes(key) ? ' ✓' : ''}
+                      {countries[key].name}
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuSubContent>
@@ -514,9 +516,9 @@ export default function EuroSweeper() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {Object.entries(countries).map(([key, country]) => (
+                {[currentCountryKey, ...travelDestinations].map(key => (
                   <SelectItem key={key} value={key}>
-                    {country.name}{beatenCountries.includes(key) ? ' ✓' : ''}
+                    {countries[key].name}
                   </SelectItem>
                 ))}
               </SelectContent>
