@@ -94,6 +94,11 @@ body {
   }
 }
 
+.flag-number {
+  color: #ffffff;
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -101,4 +106,9 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.gold-map {
+  background-image: radial-gradient(circle at 30% 20%, rgba(232, 197, 71, 0.18), transparent 60%);
+  border-color: #D4AF37;
 }

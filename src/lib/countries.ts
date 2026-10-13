@@ -1,4 +1,13 @@
-export const countries = {
+export interface Country {
+  name: string;
+  shape: number[][];
+  // Top-left cell of the board on the shared Europe map, as [row, col].
+  position: [number, number];
+  mines: number;
+  adjacent: string[];
+}
+
+export const countries: Record<string, Country> = {
   "portugal": {
     name: "Portugal",
     shape: [[0, 0, 1, 1, 0, 0, 0, 0], 
@@ -18,6 +27,7 @@ export const countries = {
             [0, 0, 1, 1, 1, 1, 0, 0], 
             [0, 1, 1, 1, 1, 1, 0, 0], 
             [0, 0, 0, 0, 1, 0, 0, 0]],
+    position: [43, 0],
     mines: 18,
     // mines: 1,
     adjacent: ["spain"],
@@ -48,6 +58,7 @@ export const countries = {
             [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    position: [38, 0],
     mines: 70,
     // mines: 1,
     adjacent: ["portugal", "france"],
@@ -84,6 +95,7 @@ export const countries = {
             [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    position: [14, 11],
     mines: 100,
     // mines: 1,
     adjacent: ["spain", "belgium", "luxembourg", "germany", "switzerland", "italy", "united kingdom"],
@@ -98,6 +110,7 @@ export const countries = {
             [0, 0, 0, 1, 1, 1, 1, 1, 1], 
             [0, 0, 0, 0, 0, 0, 1, 1, 0], 
             [0, 0, 0, 0, 0, 0, 0, 1, 0]],
+    position: [13, 27],
     mines: 12,
     // mines: 1,
     adjacent: ["france", "luxembourg", "germany", "netherlands", "united kingdom"],
@@ -108,6 +121,7 @@ export const countries = {
             [1, 1], 
             [1, 1], 
             [1, 1]],
+    position: [17, 34],
     mines: 2,
     // mines: 1,
     adjacent: ["france", "belgium", "germany"],
@@ -142,6 +156,7 @@ export const countries = {
             [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], 
             [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    position: [0, 35],
     mines: 99,
     // mines: 1,
     adjacent: ["france", "belgium", "luxembourg", "switzerland", "poland", "netherlands", "denmark", "austria", "czechia"],
@@ -156,6 +171,7 @@ export const countries = {
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
             [0, 1, 1, 1, 1, 1, 1, 0, 0, 0], 
             [0, 0, 1, 1, 1, 0, 0, 0, 0, 0]],
+    position: [25, 35],
     mines: 9,
     // mines: 1,
     adjacent: ["france", "germany", "italy", "austria"],
@@ -191,6 +207,7 @@ export const countries = {
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]],
+    position: [28, 36],
     mines: 65,
     // mines: 1,
     adjacent: ["france", "switzerland", "austria"],
@@ -220,6 +237,7 @@ export const countries = {
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]],
+    position: [0, 53],
     mines: 84,
     // mines: 1,
     adjacent: ["germany", "czechia"],
@@ -237,6 +255,7 @@ export const countries = {
             [0, 0, 0, 0, 1, 1, 1, 0, 0], 
             [0, 0, 0, 0, 0, 1, 1, 0, 0], 
             [0, 0, 0, 0, 0, 1, 0, 0, 0]],
+    position: [6, 29],
     mines: 13,
     // mines: 1,
     adjacent: ["belgium", "germany", "united kingdom"],
@@ -256,6 +275,7 @@ export const countries = {
             [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1], 
             [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], 
             [0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0]],
+    position: [-11, 39],
     mines: 21,
     // mines: 1,
     adjacent: ["germany"],
@@ -271,6 +291,7 @@ export const countries = {
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], 
             [0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], 
             [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0]],
+    position: [22, 42],
     mines: 23,
     // mines: 1,
     adjacent: ["germany", "switzerland", "italy", "czechia"],
@@ -286,6 +307,7 @@ export const countries = {
             [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0], 
             [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], 
             [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0]],
+    position: [15, 48],
     mines: 22,
     // mines: 1,
     adjacent: ["germany", "poland", "austria"],
@@ -326,6 +348,7 @@ export const countries = {
             [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 
             [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]],
+    position: [-15, 3],
     mines: 80,
     // mines: 1,
     adjacent: ["france", "belgium", "netherlands", "ireland"],
@@ -348,6 +371,7 @@ export const countries = {
             [1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0], 
             [1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0], 
             [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0]],
+    position: [-2, -2],
     mines: 24,
     // mines: 1,
     adjacent: ["united kingdom"],

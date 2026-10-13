@@ -8,6 +8,7 @@ import type { Tile as TileType } from '@/lib/game';
 interface TileProps extends TileType {
   onClick: () => void;
   isClassicMode: boolean;
+  flagColor?: string;
 }
 
 const numberColors = [
@@ -32,10 +33,12 @@ const classicNumberColors = [
   'text-gray-600',      // 8
 ];
 
-export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, onClick, isClassicMode }: TileProps) {
+export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, onClick, isClassicMode, flagColor }: TileProps) {
   if (!isVisible) {
     return <div className="aspect-square invisible" />;
   }
+
+  const showFlag = !!flagColor && isRevealed && !isMine && !isFlagged;
 
   const renderContent = () => {
     if (isFlagged) {
@@ -46,6 +49,9 @@ export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacen
         return <Bomb className={cn("w-4 h-4 sm:w-5 sm:h-5", isClassicMode ? "text-black" : "text-white")} />;
       }
       if (adjacentMines > 0) {
+        if (showFlag) {
+          return <span className="font-bold text-lg flag-number">{adjacentMines}</span>;
+        }
         const colors = isClassicMode ? classicNumberColors : numberColors;
         return <span className={cn('font-bold text-lg', colors[adjacentMines - 1])}>{adjacentMines}</span>;
       }
@@ -76,6 +82,7 @@ export default function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacen
         'w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary focus:z-10',
         isClassicMode ? classicClasses : modernClasses
       )}
+      style={showFlag ? { backgroundColor: flagColor, borderColor: 'rgba(0, 0, 0, 0.25)' } : undefined}
       aria-label={`Tile at row, col. Status: ${isRevealed ? 'Revealed' : 'Hidden'}`}
     >
       {renderContent()}

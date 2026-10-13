@@ -6,11 +6,14 @@ import Tile from '@/components/tile';
 import { Skeleton } from '@/components/ui/skeleton';
 import { countries } from '@/lib/countries';
 import { cn } from '@/lib/utils';
+import { flagColor } from '@/lib/flags';
 
 interface GameBoardProps {
   board: Board;
   onTileClick: (row: number, col: number) => void;
   isClassicMode: boolean;
+  // When set, cleared tiles are painted with this country's flag.
+  flagCountry?: string;
 }
 
 const PortugalSkeleton = () => {
@@ -43,7 +46,7 @@ const PortugalSkeleton = () => {
 };
 
 
-export default function GameBoard({ board, onTileClick, isClassicMode }: GameBoardProps) {
+export default function GameBoard({ board, onTileClick, isClassicMode, flagCountry }: GameBoardProps) {
   if (!board.length) {
     return <PortugalSkeleton />;
   }
@@ -69,6 +72,7 @@ export default function GameBoard({ board, onTileClick, isClassicMode }: GameBoa
               {...tile}
               onClick={() => onTileClick(rowIndex, colIndex)}
               isClassicMode={isClassicMode}
+              flagColor={flagCountry && flagColor(flagCountry, rowIndex, colIndex, board.length, board[0].length)}
             />
           ))
         )}

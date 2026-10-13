@@ -2,7 +2,8 @@
 
 Rebuilt from the original mines_map_generator.py. Takes the largest polygon of each
 country (the mainland, or more via PARTS), projects it to Web Mercator, rasterises it on a 50 km grid
-(a cell is land if it touches the country) and trims empty rows/columns.
+(a cell is land if it touches the country), trims empty rows/columns and records
+where the board sits on the shared Europe map.
 The grid origin comes from the original eight countries, so new countries line
 up with the existing ones.
 
@@ -54,18 +55,24 @@ def load(path):
 
 
 def rasterise(geom, xs, ys):
+    """Returns the trimmed grid and the [row, col] of its top-left cell in the full grid."""
     half = CELL_SIZE / 2
     arr = np.array([[1 if geom.intersects(box(x - half, y - half, x + half, y + half)) else 0
                      for x in xs] for y in ys])
-    arr = arr[~np.all(arr == 0, axis=1)]
-    arr = arr[:, ~np.all(arr == 0, axis=0)]
-    return arr.tolist()
+    rows, cols = np.nonzero(arr)
+    grid = arr[rows.min():rows.max() + 1, cols.min():cols.max() + 1]
+    return grid.tolist(), (int(rows.min()), int(cols.min()))
 
 
-def main(path, names):
-    geoms = load(path)
+def grid_axes(geoms):
+    """Cell centres covering every country, anchored to the original eight.
+
+    Positions are counted from the anchor's top-left cell, so they stay stable as
+    countries are added (countries further north or west get negative values).
+    """
     anchor = [geoms[n].bounds for n in ANCHOR_COUNTRIES]
     ox, oy = min(b[0] for b in anchor), min(b[1] for b in anchor)
+    top = oy + np.ceil((max(b[3] for b in anchor) - oy) / CELL_SIZE) * CELL_SIZE
     bounds = [g.bounds for g in geoms.values()]
 
     def axis(origin, lo, hi):
@@ -74,12 +81,21 @@ def main(path, names):
 
     xs = axis(ox, [b[0] for b in bounds], [b[2] for b in bounds])
     ys = axis(oy, [b[1] for b in bounds], [b[3] for b in bounds])[::-1]
+    row0 = int(round((top - ys[0]) / CELL_SIZE))
+    col0 = int(round((xs[0] - ox) / CELL_SIZE))
+    return xs, ys, row0, col0
+
+
+def main(path, names):
+    geoms = load(path)
+    xs, ys, row0, col0 = grid_axes(geoms)
     for name in names:
-        grid = rasterise(geoms[name], xs, ys)
+        grid, (r, c) = rasterise(geoms[name], xs, ys)
         rows = ", \n            ".join(json.dumps(r) for r in grid)
         print(f'  "{name.lower()}": {{')
         print(f'    name: "{name}",')
         print(f'    shape: [{rows}],')
+        print(f'    position: [{r + row0}, {c + col0}],')
         print(f'    // {sum(map(sum, grid))} cells')
         print("  },")
 
