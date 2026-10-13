@@ -37,7 +37,7 @@ const PortugalSkeleton = () => {
         {portugalShape.map((row, rowIndex) =>
           row.map((cell, colIndex) =>
             cell === 1 ? (
-              <Skeleton key={`${rowIndex}-${colIndex}`} className="aspect-square rounded-sm" />
+              <Skeleton key={`${rowIndex}-${colIndex}`} className="aspect-square rounded-sm bg-tile-hidden" />
             ) : (
               <div key={`${rowIndex}-${colIndex}`} className="aspect-square invisible" />
             )

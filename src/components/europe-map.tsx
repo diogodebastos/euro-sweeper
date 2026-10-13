@@ -46,7 +46,7 @@ export default function EuropeMap() {
     const cells: Cell[] = [];
     grid.forEach((line, row) => line.forEach((cell, col) => {
       if (!cell) return;
-      const color = isGold ? goldOf[cell.key] : done.has(cell.key) ? cell.flag : 'hsl(var(--muted))';
+      const color = isGold ? goldOf[cell.key] : done.has(cell.key) ? cell.flag : 'hsl(var(--map-empty))';
       cells.push({ key: cell.key, row, col, color });
     }));
     return { cells, width: EUROPE_COLS, height: EUROPE_ROWS };
@@ -99,6 +99,8 @@ export default function EuropeMap() {
               height={0.88}
               rx={0.12}
               fill={color}
+              stroke="var(--map-cell-stroke)"
+              strokeWidth={0.06}
               opacity={hovered && hovered !== key ? 0.55 : 1}
               onMouseEnter={() => setHovered(key)}
             >

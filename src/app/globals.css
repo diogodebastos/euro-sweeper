@@ -33,6 +33,13 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    /* Board tiles and the Europe map: unopened tiles must stand out from the card. */
+    --tile-hidden: 214 26% 79%;
+    --tile-hidden-hover: 214 26% 71%;
+    --tile-revealed: 0 0% 100%;
+    --tile-revealed-border: 214 24% 84%;
+    --map-empty: 214 22% 82%;
+    --map-cell-stroke: rgba(15, 23, 42, 0.22);
   }
   .dark {
     --background: 222.2 84% 4.9%;
@@ -59,6 +66,12 @@ body {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --tile-hidden: 217.2 32.6% 17.5%;
+    --tile-hidden-hover: 217.2 32.6% 24%;
+    --tile-revealed: 222.2 84% 4.9%;
+    --tile-revealed-border: 217.2 32.6% 17.5%;
+    --map-empty: 217.2 32.6% 17.5%;
+    --map-cell-stroke: transparent;
   }
 
   .classic {

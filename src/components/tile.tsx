@@ -17,15 +17,16 @@ interface TileProps extends TileType {
   title?: string;
 }
 
+// Each number has a lighter shade for the dark theme, so 4, 5 and 7 stay readable.
 const numberColors = [
-  'text-blue-600',   // 1
-  'text-green-700',  // 2
-  'text-red-600',    // 3
-  'text-blue-900', // 4
-  'text-red-900',  // 5
-  'text-teal-600',   // 6
-  'text-black',      // 7
-  'text-gray-500',   // 8
+  'text-blue-600 dark:text-blue-400',      // 1
+  'text-green-700 dark:text-green-500',    // 2
+  'text-red-600 dark:text-red-500',        // 3
+  'text-blue-900 dark:text-indigo-300',    // 4
+  'text-red-900 dark:text-rose-300',       // 5
+  'text-teal-600 dark:text-teal-400',      // 6
+  'text-black dark:text-slate-100',        // 7
+  'text-gray-500 dark:text-gray-400',      // 8
 ];
 
 const classicNumberColors = [
@@ -69,8 +70,8 @@ function Tile({ isVisible, isRevealed, isMine, isFlagged, adjacentMines, row, co
   };
 
   const modernClasses = {
-    'bg-secondary hover:bg-muted cursor-pointer': !isRevealed,
-    'bg-background border border-muted': isRevealed && !isMine && !isFlagged,
+    'bg-tile-hidden hover:bg-tile-hover cursor-pointer': !isRevealed,
+    'bg-tile-revealed border border-tile-border': isRevealed && !isMine && !isFlagged,
     'bg-destructive': isRevealed && isMine,
     'cursor-pointer': !isRevealed || (isRevealed && !isFlagged),
     'cursor-default': isRevealed && isFlagged,

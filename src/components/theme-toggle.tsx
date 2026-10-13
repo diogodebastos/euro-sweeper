@@ -4,6 +4,7 @@ import * as React from "react"
 import { Moon, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { THEME_KEY } from "@/lib/theme"
 
 export type ThemeToggleHandle = {
   toggle: () => void;
@@ -20,10 +21,11 @@ export const ThemeToggle = React.forwardRef<ThemeToggleHandle>((props, ref) => {
   const toggleTheme = () => {
     setThemeState(prevTheme => {
       const newTheme = prevTheme === 'dark' ? 'light' : 'dark';
-      if (newTheme === 'dark') {
-        document.documentElement.classList.add("dark")
-      } else {
-        document.documentElement.classList.remove("dark")
+      document.documentElement.classList.toggle("dark", newTheme === 'dark');
+      try {
+        localStorage.setItem(THEME_KEY, newTheme);
+      } catch {
+        // Storage unavailable: the theme lasts this visit only.
       }
       return newTheme;
     });

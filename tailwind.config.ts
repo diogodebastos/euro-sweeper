@@ -15,6 +15,12 @@ export default {
         code: ['monospace'],
       },
       colors: {
+        tile: {
+          hidden: 'hsl(var(--tile-hidden))',
+          hover: 'hsl(var(--tile-hidden-hover))',
+          revealed: 'hsl(var(--tile-revealed))',
+          border: 'hsl(var(--tile-revealed-border))',
+        },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
