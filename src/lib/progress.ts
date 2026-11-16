@@ -4,7 +4,7 @@ export const CLASSIC_AT = 5;
 export const FLAGS_AT = 10;
 export const EUROPE_AT = Object.keys(countries).length;
 export const HARD_MINES_FACTOR = 1.25;
-export const BOSS_LIVES = 3;
+export const BOSS_LIVES = 5;
 
 export interface Progress {
   // Countries cleared on the current tour of Europe.

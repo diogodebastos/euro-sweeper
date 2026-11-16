@@ -26,13 +26,15 @@ interface MobileBarProps {
   onChordingChange: (on: boolean) => void;
   onRestart: () => void;
   restartLabel?: string;
+  // Shown on the controls row, between the buttons and the menu.
+  extra?: ReactNode;
   // DropdownMenu items for the ⋯ menu.
   menu: ReactNode;
   className?: string;
 }
 
 export default function MobileBar({
-  title, stats, isFlagging, onFlaggingChange, isChording, onChordingChange, onRestart, restartLabel = 'Restart', menu, className,
+  title, stats, isFlagging, onFlaggingChange, isChording, onChordingChange, onRestart, restartLabel = 'Restart', extra, menu, className,
 }: MobileBarProps) {
   return (
     <div className={cn('sm:hidden w-full mb-3 px-3 py-2 bg-card rounded-lg shadow-md border flex-shrink-0', className)}>
@@ -64,6 +66,7 @@ export default function MobileBar({
         <Button variant="outline" size="icon" className="h-9 w-9" onClick={onRestart} aria-label={restartLabel}>
           <RefreshCw className="w-5 h-5" />
         </Button>
+        {extra && <div className="flex-1 flex justify-center min-w-0">{extra}</div>}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="icon" className="h-9 w-9 ml-auto" aria-label="More options">

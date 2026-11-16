@@ -345,7 +345,7 @@ export default function EuroSweeper() {
           title: "Congratulations! You've swept the entire Europe!",
           description: isBossBeaten
             ? "Another tour of Europe complete. You are a true EuroSweeper champion!"
-            : "Every country is swept. One challenge is left: all of Europe on a single board. Three lives, about 590 mines.",
+            : "Every country is swept. One challenge is left: all of Europe on a single board. Five lives, about 590 mines.",
           actions: (
             <>
               <AlertDialogAction asChild>

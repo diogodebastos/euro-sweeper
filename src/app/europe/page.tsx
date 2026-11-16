@@ -4,7 +4,7 @@ import SiteFooter from '@/components/site-footer';
 
 export const metadata: Metadata = {
   title: 'EuroSweeper: Final boss',
-  description: 'Every EuroSweeper country on a single board, with three lives.',
+  description: 'Every EuroSweeper country on a single board, with five lives.',
 };
 
 export default function EuropePage() {
